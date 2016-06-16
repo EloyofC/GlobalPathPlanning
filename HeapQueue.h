@@ -5,17 +5,15 @@
 */
 
 #ifndef _Heap_Queue_H
-
-#include <stdio.h>
-#include <stdlib.h>
+#define _Heap_Queue_H
 
 struct t_HeapStruct;
 typedef struct t_HeapStruct *t_PriorityQueuePtr;
 struct t_EnvMember;
 typedef struct t_EnvMember *t_EnvironmentMemberPtr;
-typedef t_EnvironmentMemberPtr t_ElementTypePtr;
+typedef t_EnvironmentMemberPtr t_ElementTypePtr; /* store the ptr to the environment inside the queue */
 
-t_PriorityQueuePtr InitializePriorityQueue();
+t_PriorityQueuePtr InitializePriorityQueue(void);
 void DestroyPriorityQueue(t_PriorityQueuePtr queue);
 t_PriorityQueuePtr InsertPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_ElementTypePtr X, t_PriorityQueuePtr queue);
 t_ElementTypePtr DeleteMinPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_PriorityQueuePtr queue);

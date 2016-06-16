@@ -1,27 +1,31 @@
-CC = gcc -g -Wall
-DEBUG ?= 1
+CC = gcc -g -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -fPIC
+DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	CFLAGS = -O1 -DDEBUG
 else
 	CFLAGS = -O2 -DNDEBUG
 endif
 
-objects = advancedplan.o localplanning.o pretreatment.o heaparray.o publicfun.o
+objects = advancedplan.o localplanning.o pretreatment.o heaparray.o publicfun.o mission.o
+testsample = test.c
+all : libmission.so test
+test : $(testsample) PathAndShow.h
+	$(CC) -o $@ $(CFLAGS) test.c -lmission -lm
 
-atest : $(objects) main.o
-	$(CC) -o atest $(objects) main.o $(CFLAGS)
-
-main.o : MapProcess.h GetChangeEnv.h ComPlan.h $(objects)
+libmission.so : $(objects)
+	gcc -shared -o $@ $^
+mission.o : GetChangeEnv.h ComPlan.h PublicFun.h PathAndShow.h localplanning.o publicfun.o pretreatment.o
 advancedplan.o : GetChangeEnv.h ComPlan.h PublicFun.h localplanning.o heaparray.o publicfun.o
 localplanning.o : GetChangeEnv.h ComPlan.h HeapQueue.h heaparray.o publicfun.o pretreatment.o
 pretreatment.o : GetChangeEnv.h MapProcess.h PublicFun.h publicfun.o
 heaparray.o : HeapQueue.h PublicFun.h publicfun.o
 publicfun.o : PublicFun.h
 
+
 .PHONY : clean
 clean :
-	rm atest $(objects) main.o
+	rm test $(objects) libmission.a
 
-.PHONY : testwhole
-testwhole :
-	./atest < ./map1
+.PHONY : run
+run :
+	./test

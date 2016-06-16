@@ -3,10 +3,16 @@
   Author: Green
   Date: 16/06/02
  */
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "HeapQueue.h"
 #include "PublicFun.h"
+#include "GetChangeEnv.h"
+
 
 #define c_priorityQueueSize 800
+
 
 struct t_HeapStruct
 {
@@ -22,9 +28,14 @@ static t_PriorityQueuePtr MakeQueueBigger(t_PriorityQueuePtr queue);
 static int GetFather(int childIndex);
 static int GetLeftChild(int fatherIndex);
 
+/* count the times that call the PriorityQueue */
+static int sg_priorityQueueCount = 0;
+
 t_PriorityQueuePtr
-InitializePriorityQueue()
+InitializePriorityQueue(void)
 {
+  sg_priorityQueueCount++;
+
   return InitializeWithSize(c_priorityQueueSize);
 }
 
@@ -34,7 +45,7 @@ InitializeWithSize(int elementSize)
   t_PriorityQueuePtr queue;
 
   queue = Malloc(sizeof(struct t_HeapStruct));
-  queue->m_elementsPtr = Malloc((elementSize + 1) * sizeof(t_ElementTypePtr));
+  queue->m_elementsPtr = Malloc((elementSize + 1) * sizeof(t_ElementTypePtr)); /* the thing that store inside is the ptr to the environment */
 
   queue->m_size = elementSize;
   queue->m_index = 0;
@@ -59,6 +70,7 @@ InsertPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_ElementTy
 {
   int i;
 
+  assert(X != NULL);
   if (IsQueueFull(queue)) {
     queue = MakeQueueBigger(queue);
   }
@@ -73,6 +85,11 @@ InsertPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_ElementTy
     queue->m_elementsPtr[i] = queue->m_elementsPtr[GetFather(i)];
   }
   queue->m_elementsPtr[i] = X;
+
+  DebugCodeDetail (
+		   printf("InsertPriorityQueue : The %d times PriorityQueue of x %d y %d priority %d cost %d\n", sg_priorityQueueCount, GetEnvMemberX(X), GetEnvMemberY(X), GetEnvMemberPriority(X), GetEnvMemberCost(X));
+		   fflush(stdout);
+		   );
   return queue;
 }
 
@@ -83,6 +100,7 @@ MakeQueueBigger(t_PriorityQueuePtr queue)
   int i;
 
   priorityQueueNew = InitializeWithSize(queue->m_size * 2);
+  priorityQueueNew->m_index = queue->m_index;
   for (i = 0; i < queue->m_index; i++) {
     priorityQueueNew->m_elementsPtr[i] = queue->m_elementsPtr[i];
   }
@@ -98,10 +116,14 @@ DeleteMinPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_Priori
   t_ElementTypePtr elementPrev, elementMin;
 
   if (IsQueueEmpty(queue)) {
-    fprintf(stderr, "Priority queue is empty");
-    exit(1);
+    DebugCode (
+	       printf("DeleteMinPriorityQueue : Queue is empty\n");
+	       fflush(stdout);
+	       );
+    return NULL;		/* return the responsibility of handling no way existence to the upper */
   }
   elementMin = queue->m_elementsPtr[0];
+  assert(elementMin != NULL);	/* the elementMin can not be NULL */
   queue->m_index--;
   elementPrev = queue->m_elementsPtr[queue->m_index];
 
@@ -118,6 +140,11 @@ DeleteMinPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_Priori
       break;
   }
   queue->m_elementsPtr[i] = elementPrev;
+
+  DebugCodeDetail (
+		   printf("DeleteMinPriorityQueue : The %d times PriorityQueue of Min x %d y %d priority %d cost %d\n", sg_priorityQueueCount, GetEnvMemberX(elementMin), GetEnvMemberY(elementMin), GetEnvMemberPriority(elementMin), GetEnvMemberCost(elementMin));
+		   fflush(stdout);
+		   );
 
   return elementMin;
 }
