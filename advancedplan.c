@@ -37,6 +37,7 @@ static t_PathLineMemsPtr sg_distributedPoints = NULL; /* for distribute points *
 static t_NearestQueuePtr sg_nearQueue = NULL; /* for the search nearest free point */
 
 
+static int GetTestGpsX(t_EnvironmentPtr environment);
 static int AstarInlocal(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr environment);
 static int GetPathLineGpsX(t_EnvironmentPtr environment);
 static int GetPathLineGpsY(t_EnvironmentPtr environment);
@@ -506,14 +507,29 @@ static int
 GetPathLineGpsX(t_EnvironmentPtr environment)
 {
   int x, xGps;
-  double shift;
+  double shift, lona;
 
   x = GetPathLineX() * GetEnvLengthOfUnit(environment);
   x *= pow(10, 4);
-  shift = x / (111 * cos(Angle2Radians((double) GetEnvTopLeftY(environment))));
+  lona = (double)GetEnvTopLeftY(environment)/pow(10,7);
+  shift = x / (111 * cos(Angle2Radians(lona)));
   shift = SimpleDoubleAbs(shift);
   xGps = GetEnvTopLeftX(environment) + (int)shift;
-  assert(GetEnvTopLeftX(environment) < xGps < (int) ((double) GetEnvBottomRightX(environment) * 1.1));
+  return xGps;
+}
+
+static int
+GetTestGpsX(t_EnvironmentPtr environment)
+{
+  int x, xGps;
+  double shift, lona;
+
+  x = GetEnvLength(environment) * GetEnvLengthOfUnit(environment);
+  x *= pow(10, 4);
+  lona = (double)GetEnvTopLeftY(environment)/pow(10,7);
+  shift = x / (111 * cos(Angle2Radians(lona)));
+  shift = SimpleDoubleAbs(shift);
+  xGps = GetEnvTopLeftX(environment) + (int)shift;
   return xGps;
 }
 

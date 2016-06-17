@@ -26,10 +26,10 @@ TestNoObstacle(void)
   int lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width;
   t_ObstaclesPtr obstacles;
 
-  lonTopLeft = 1213267641;
-  latTopLeft = 280643580;
-  lonBottomRight = 1214258940;
-  latBottomRight = 279981016;
+  lonTopLeft = 1200291593;
+  latTopLeft = 356995731;
+  lonBottomRight = 1201856045;
+  latBottomRight = 356052480;
   width = 50;
   printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
   printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
