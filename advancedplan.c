@@ -501,7 +501,7 @@ PrintAndFreePathLine(void)
   the element x in the map is bigger than the topleft point and the y is smaller than the topleft point
   the formual: longitude = curlongi + x / (111.3 * math.cos(math.radians(curlat)))/ 1000(parameter is m)
   latitude = curlat - y/111.3/1000
-  Remember that the answer is ought to inhance 10^7
+  Remember that the answer is ought to inhance 10^7 like 1200291593, the remember that the angle is like 120.0291593
 */
 static int
 GetPathLineGpsX(t_EnvironmentPtr environment)
