@@ -44,8 +44,8 @@ InitializeWithSize(int elementSize)
 {
   t_PriorityQueuePtr queue;
 
-  queue = Malloc(sizeof(struct t_HeapStruct));
-  queue->m_elementsPtr = Malloc((elementSize + 1) * sizeof(t_ElementTypePtr)); /* the thing that store inside is the ptr to the environment */
+  queue = (t_PriorityQueuePtr)Malloc(sizeof(struct t_HeapStruct));
+  queue->m_elementsPtr = (t_ElementTypePtr *)Malloc((elementSize + 1) * sizeof(t_ElementTypePtr)); /* the thing that store inside is the ptr to the environment */
 
   queue->m_size = elementSize;
   queue->m_index = 0;

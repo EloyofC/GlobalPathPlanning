@@ -20,6 +20,7 @@ t_PathLinesPtr
 DoCruiseGeneral(int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles)
 {
   int cellStartX, cellStartY, cellEndX, cellEndY, cellWidth; /* cellWidth is width convert to suite th cell */
+  int endPointX, endPointY;				     /* the real endpoint need to be smaller than cellEnd for the cal of * and div */
   int IsSearchSuccess;
   t_EnvironmentPtr newEnvironment;
   t_PathLinesPtr pathLines;
@@ -32,6 +33,8 @@ DoCruiseGeneral(int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLe
   newEnvironment = InitialEnvWithGps(c_lengthOfUnit, c_widthOfUnit, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
   SetObstaclesInEnvironment(obstacles, newEnvironment);
 
+  endPointX = cellStartX - 1;
+  endPointY = cellStartY - 1;
   IsSearchSuccess = ScanSearch(cellStartX, cellStartY, cellEndX, cellEndY, cellWidth, newEnvironment);
   DebugCode(
 	    PrintEnvPathLine();

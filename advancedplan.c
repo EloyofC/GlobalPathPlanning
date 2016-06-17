@@ -505,14 +505,16 @@ PrintAndFreePathLine(void)
 static int
 GetPathLineGpsX(t_EnvironmentPtr environment)
 {
-  int x;
+  int x, xGps;
   double shift;
 
   x = GetPathLineX() * GetEnvLengthOfUnit(environment);
   x *= pow(10, 4);
   shift = x / (111 * cos(Angle2Radians((double) GetEnvTopLeftY(environment))));
   shift = SimpleDoubleAbs(shift);
-  return GetEnvTopLeftX(environment) + (int)shift;
+  xGps = GetEnvTopLeftX(environment) + (int)shift;
+  assert(GetEnvTopLeftX(environment) < xGps < (int) ((double) GetEnvBottomRightX(environment) * 1.1));
+  return xGps;
 }
 
 static int

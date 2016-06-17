@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "PublicFun.h"
 #include "PathAndShow.h"
 
 static t_ObstaclesPtr GetObstaclesInArea(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight);
@@ -25,10 +26,10 @@ TestNoObstacle(void)
   int lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width;
   t_ObstaclesPtr obstacles;
 
-  lonTopLeft = 1223012682;
-  latTopLeft = 315632296;
-  lonBottomRight = 1225999885;
-  latBottomRight = 313792624;
+  lonTopLeft = 1213267641;
+  latTopLeft = 280643580;
+  lonBottomRight = 1214258940;
+  latBottomRight = 279981016;
   width = 50;
   printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
   printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
@@ -41,10 +42,10 @@ TestSingleObstacle(void)
   int lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width;
   t_ObstaclesPtr obstacles;
 
-  lonTopLeft = 1206480644;
-  latTopLeft = 380044038;
-  lonBottomRight = 1208053971;
-  latBottomRight = 378817969;
+  lonTopLeft = 1215310670;
+  latTopLeft = 341129741;
+  lonBottomRight = 1220060521;
+  latBottomRight = 339570578;
   width = 50;
   printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
   printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
@@ -65,6 +66,7 @@ TestTemplate(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRi
   } else {
     printf("Sad\n");
   }
+  fflush(stdout);
   return 0;
 }
 static t_ObstaclesPtr
@@ -93,7 +95,7 @@ GetObstaclesInArea(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBo
 static t_PointCorPtr
 CreatePointArray(int size)
 {
-  return Malloc(size * sizeof(struct t_PointCor));
+  return (t_PointCorPtr)Malloc(size * sizeof(struct t_PointCor));
 }
 
 static void
@@ -105,13 +107,13 @@ SetSingleObstacleCount(int count, t_SingleObstaclePtr singleObstacle)
 static t_SingleObstaclePtr
 CreateSingleObstacleArray(int size)
 {
-  return Malloc(size * sizeof(struct t_SingleObstacle));
+  return (t_SingleObstaclePtr)Malloc(size * sizeof(struct t_SingleObstacle));
 }
 
 static t_ObstaclesPtr
 CreateObstacles(void)
 {
-  return Malloc(sizeof(struct t_Obstacles));
+  return (t_ObstaclesPtr)Malloc(sizeof(struct t_Obstacles));
 }
 
 static void
