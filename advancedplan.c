@@ -509,9 +509,10 @@ GetPathLineGpsX(t_EnvironmentPtr environment)
   double shift;
 
   x = GetPathLineX() * GetEnvLengthOfUnit(environment);
-  shift = x / (111.3 * cos(Angle2Radians(GetEnvTopLeftY(environment))));
-  shift *= pow(10, 4);
-  return GetEnvTopLeftX(environment) + shift;
+  x *= pow(10, 4);
+  shift = x / (111 * cos(Angle2Radians((double) GetEnvTopLeftY(environment))));
+  shift = SimpleDoubleAbs(shift);
+  return GetEnvTopLeftX(environment) + (int)shift;
 }
 
 static int
@@ -521,9 +522,9 @@ GetPathLineGpsY(t_EnvironmentPtr environment)
   double shift;
 
   y = GetPathLineY() * GetEnvWidthOfUnit(environment);
-  shift = y / 111.3;
-  shift *= pow(10, 4);
-  return GetEnvTopLeftY(environment) - shift;
+  y *= pow(10, 4);
+  shift = y / 111;
+  return GetEnvTopLeftY(environment) - (int) shift;
 }
 
 static int

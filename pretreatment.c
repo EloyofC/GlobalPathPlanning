@@ -544,8 +544,8 @@ InitialEnvWithCell(int length, int width, int lengthOfUnit, int widthOfUnit, int
   int xIndex, yIndex;
   t_EnvironmentPtr environment;
 
-  xIndex = length / lengthOfUnit + 1; /* need to thinkthrough */
-  yIndex = width / widthOfUnit + 1;   /* need to plus 1 or not? */
+  xIndex = length / lengthOfUnit + 1; /* cos the length is indeed to be double type so plus 1 */
+  yIndex = width / widthOfUnit + 1;
 
   environment = CreateEnvironment(xIndex, yIndex);
   InitialEnvironment(xIndex, yIndex, xTopLeft, yTopLeft, xBottomRight, yBottomRight, lengthOfUnit, widthOfUnit, environment);

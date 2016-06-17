@@ -9,11 +9,36 @@ static t_SingleObstaclePtr CreateSingleObstacleArray(int size);
 static t_ObstaclesPtr CreateObstacles(void);
 static void SetObstaclesCount(int count, t_ObstaclesPtr obstacles);
 static t_PointCorPtr GetNextPoint(t_PointCorPtr point);
+static int TestSingleObstacle(void);
+static int TestNoObstacle(void);
+static int TestTemplate(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles);
 
 int main(int argc, char *argv[])
 {
+  return TestNoObstacle();
+}
+
+
+static int
+TestNoObstacle(void)
+{
   int lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width;
-  t_PathLinesPtr pathLines;
+  t_ObstaclesPtr obstacles;
+
+  lonTopLeft = 1223012682;
+  latTopLeft = 315632296;
+  lonBottomRight = 1225999885;
+  latBottomRight = 313792624;
+  width = 50;
+  printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
+  printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
+  obstacles = NULL;
+  return TestTemplate(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width, obstacles);
+}
+static int
+TestSingleObstacle(void)
+{
+  int lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width;
   t_ObstaclesPtr obstacles;
 
   lonTopLeft = 1206480644;
@@ -21,7 +46,17 @@ int main(int argc, char *argv[])
   lonBottomRight = 1208053971;
   latBottomRight = 378817969;
   width = 50;
+  printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
+  printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
   obstacles = GetObstaclesInArea(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
+  return TestTemplate(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width, obstacles);
+}
+
+static int
+TestTemplate(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles)
+{
+  t_PathLinesPtr pathLines;
+
   pathLines = DoCruiseGeneral(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width, obstacles);
   if (pathLines != NULL) {
     PrintGpsPathLines(pathLines);
@@ -32,7 +67,6 @@ int main(int argc, char *argv[])
   }
   return 0;
 }
-
 static t_ObstaclesPtr
 GetObstaclesInArea(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight)
 {

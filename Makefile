@@ -9,7 +9,7 @@ endif
 objects = advancedplan.o localplanning.o pretreatment.o heaparray.o publicfun.o mission.o
 testsample = test.c
 all : libmission.a test
-test : $(testsample) PathAndShow.h
+test : $(testsample) PathAndShow.h libmission.a
 	$(CC) -o $@ $(CFLAGS) test.c -L. -lmission -lm
 
 libmission.a : $(objects)
