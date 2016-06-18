@@ -8,6 +8,7 @@ endif
 
 objects = advancedplan.o localplanning.o pretreatment.o heaparray.o publicfun.o mission.o
 testsample = test.c
+
 all : libmission.a test
 test : $(testsample) PathAndShow.h libmission.a
 	$(CC) -o $@ $(CFLAGS) test.c -L. -lmission -lm
@@ -29,3 +30,7 @@ clean :
 .PHONY : run
 run :
 	./test
+
+.PHONY : leakcheck
+leakcheck :
+	valgrind --leak-check=full --track-fds=yes ./test
