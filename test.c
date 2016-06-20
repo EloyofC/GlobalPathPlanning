@@ -16,7 +16,7 @@ static int TestTemplate(int lonTopLeft, int latTopLeft, int lonBottomRight, int 
 
 int main(int argc, char *argv[])
 {
-  return TestNoObstacle();
+  return TestSingleObstacle();
 }
 
 
@@ -30,7 +30,7 @@ TestNoObstacle(void)
   latTopLeft = 356995731;
   lonBottomRight = 1201856045;
   latBottomRight = 356052480;
-  width = 50;
+  width = 500;
   printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
   printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
   obstacles = NULL;
@@ -42,10 +42,10 @@ TestSingleObstacle(void)
   int lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width;
   t_ObstaclesPtr obstacles;
 
-  lonTopLeft = 1215310670;
-  latTopLeft = 341129741;
-  lonBottomRight = 1220060521;
-  latBottomRight = 339570578;
+  lonTopLeft = 1206480644;
+  latTopLeft = 380044038;
+  lonBottomRight = 1208053971;
+  latBottomRight = 378817969;
   width = 50;
   printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
   printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);

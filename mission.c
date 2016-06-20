@@ -5,8 +5,8 @@
 #include "PublicFun.h"
 #include "ComPlan.h"
 
-#define c_lengthOfUnit 50
-#define c_widthOfUnit 50
+#define c_lengthOfUnit 100
+#define c_widthOfUnit 100
 
 
 static int GetFinalPointLon(t_PathPointPtr pathPoint);
@@ -29,7 +29,7 @@ DoCruiseGeneral(int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLe
   cellStartY = CalGpsDistanceLat(lonTopLeft, latTopLeft, lonStart, latStart) / c_widthOfUnit;
   cellEndX =  CalGpsDistanceLon(lonTopLeft, latTopLeft, lonEnd, latEnd) / c_lengthOfUnit;
   cellEndY =  CalGpsDistanceLat(lonTopLeft, latTopLeft, lonEnd, latEnd) / c_widthOfUnit;
-  cellWidth = width / c_widthOfUnit;
+  cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
   newEnvironment = InitialEnvWithGps(c_lengthOfUnit, c_widthOfUnit, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
   SetObstaclesInEnvironment(obstacles, newEnvironment);
 
@@ -37,8 +37,8 @@ DoCruiseGeneral(int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLe
   endPointY = cellEndY - 1;
   IsSearchSuccess = ScanSearch(cellStartX, cellStartY, endPointX, endPointY, cellWidth, newEnvironment);
   DebugCode(
-	    PrintEnvPathLine();
-	    );
+ 	    PrintEnvPathLine();
+ 	    );
   if (IsSearchSuccess) {
   pathLines = GetGpsPathLines(newEnvironment);
   DeleteEnvironment(newEnvironment);

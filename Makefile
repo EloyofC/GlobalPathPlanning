@@ -1,5 +1,5 @@
 CC = gcc -g -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes
-DEBUG ?= 0
+DEBUG ?= 0			#usage: make DEBUG=\d
 ifeq ($(DEBUG), 1)
 	CFLAGS = -O1 -DDEBUG
 else
@@ -22,7 +22,6 @@ pretreatment.o : GetChangeEnv.h PublicFun.h publicfun.o
 heaparray.o : HeapQueue.h PublicFun.h publicfun.o
 publicfun.o : PublicFun.h
 
-
 .PHONY : clean
 clean :
 	rm test $(objects) libmission.a
@@ -30,6 +29,11 @@ clean :
 .PHONY : run
 run :
 	./test
+
+.PHONY : showenv
+showenv :
+	./test > test.log
+	./testglobalenv.py
 
 .PHONY : leakcheck
 leakcheck :

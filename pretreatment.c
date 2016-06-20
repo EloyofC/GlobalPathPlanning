@@ -120,7 +120,7 @@ InitialEnvWithGps(int lengthOfUnit, int widthOfUnit, int lonTopLeft, int latTopL
   width = CalGpsDistanceLat(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
 
   DebugCode (
-	     printf("Length is %d, and Width is %d\n", length, width);
+	     printf("InitialEnvWithGps : length %d width %d\n", length, width);
 	     fflush(stdout);
 	     );
 
@@ -144,6 +144,10 @@ SetObstaclesInEnvironment(t_ObstaclesPtr obstacles, t_EnvironmentPtr newEnvironm
   for (i=0; i < obstacleCounts; i++) {
     SetSingleObstacleInEnvironment(GetSingleObstacle(singleObstacle, i), newEnvironment);
   }
+  DebugCode (
+             PrintEnvironment(newEnvironment);
+             /* DrawEnvironmentPicture(environment); */
+             );
   return;
 }
 
@@ -158,16 +162,12 @@ SetSingleObstacleInEnvironment(t_SingleObstaclePtr singleObstacle, t_Environment
   adaptPoints = GetAdaptPoints(singleObstacle, environment);
   GetAdaptStartXY(&xStart, &yStart, adaptPoints);
   DrawLineInEnv(adaptPoints, environment);
-  DebugCode(
-	    PrintAdaptPoints(adaptPoints);
-	    printf("SetSingleObstacleInEnvironment : xStart %d yStart %d\n", xStart, yStart);
-	    );
+  DebugCodeDetail (
+                   PrintAdaptPoints(adaptPoints);
+                   printf("SetSingleObstacleInEnvironment : xStart %d yStart %d\n", xStart, yStart);
+                   );
   FreeAdaptPoints(adaptPoints);
   BoundaryFillInEnv(xStart, yStart, c_neighbourNum, environment);
-  DebugCode(
-	    PrintEnvironment(environment);
-	    DrawEnvironmentPicture(environment);
-	    );
 }
 
 static void
@@ -603,7 +603,7 @@ PrintEnvironment(t_EnvironmentPtr environment)
 {
   int i,j;
 
-  printf("PrintEnvironment : The Environment with Length:%d, Width:%d\n", environment->m_envLength, environment->m_envWidth);
+  printf("PrintEnvironment : The Environment with length %d width %d\n", environment->m_envLength, environment->m_envWidth);
   for (i=0; i < environment->m_envLength; i++)
     for (j=0; j < environment->m_envWidth; j++)
       PrintEnvironmentMember(i, j, environment);

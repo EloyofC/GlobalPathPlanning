@@ -12,7 +12,7 @@
 //#define DEBUG
 #if defined( DEBUG )
 #define DebugCode( code_fragment ) { code_fragment }
-#define DebugCodeDetail( code_fragment ) { code_fragment }
+#define DebugCodeDetail( code_fragment )
 #else
 #define DebugCode( code_fragment )
 #define DebugCodeDetail( code_fragement )

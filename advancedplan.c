@@ -130,6 +130,7 @@ DepthFirstPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr 
   return xHeuristic + yHeuristic;
 }
 
+/* can add some restraint of keep the same direction with the previous and stay at the same y(or may be the line of start and the end) */
 static int
 AStarPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment)
 {
@@ -359,9 +360,9 @@ StorePathLine(int xEnd, int yEnd, t_PathLineMemsPtr pathLine, t_EnvironmentPtr e
   t_PathLineMemsPtr pathLineNew = NULL;
 
   for (memberPrev = GetEnvMember(xEnd, yEnd, environment); memberPrev != NULL; memberPrev = GetEnvMemberPrev(memberPrev)) {
-    DebugCode(
+    DebugCodeDetail(
 	      static int i = 1;
-	      printf("StorePathLine : %d's time search Searched Member has X %d, Y %d, Cost %d\n", i++, GetEnvMemberX(memberPrev), GetEnvMemberY(memberPrev), GetEnvMemberCost(memberPrev));
+	      printf("StorePathLine : %d nd search Searched Member has X %d, Y %d, Cost %d\n", i++, GetEnvMemberX(memberPrev), GetEnvMemberY(memberPrev), GetEnvMemberCost(memberPrev));
 	      fflush(stdout);
 	      );
     pathLineNew = StoreNewPathMember(memberPrev, pathLineNew);
@@ -674,12 +675,12 @@ PartialPathSearch(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr e
     ResetEnvironment(environment);
   }
 
-  DebugCode (
+  DebugCodeDetail (
 	     printf("PartialPathSearch : Searching Between x %d y %d to x %d y %d\n", xStart, yStart, xEnd, yEnd);
 	     fflush(stdout);
 	     );
   if (AstarInlocal(xStart, yStart, xEnd, yEnd, environment) == 0) {
-    DebugCode (
+    DebugCodeDetail (
 	       printf("PartialPathSearch : Search Between x %d y %d to x %d y %d is wrong\n", xStart, yStart, xEnd, yEnd);
 	       fflush(stdout);
 	       );
@@ -695,7 +696,7 @@ AppendLine(t_PathLineMemsPtr pathLineFirst, t_PathLineMemsPtr pathLineSecond)
 {
   t_PathLineMemsPtr linePrev;
 
-  DebugCode (
+  DebugCodeDetail (
 	     static int i = 1;
 	     printf("AppendLine : This is for %d nd the first part of AppendLine\n", i);
 	     PrintPathFinalPoints(pathLineFirst);
