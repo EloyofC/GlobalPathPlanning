@@ -293,9 +293,10 @@ DrawLineWithTwoPointsInEnv(t_AdaptPointPtr pointFirst, t_AdaptPointPtr pointSeco
   yPointFirst = GetAdaptPointY(pointFirst);
   xPointSecond = GetAdaptPointX(pointSecond);
   yPointSecond = GetAdaptPointY(pointSecond);
-  DebugCodeDetail(
-		  printf("DrawLineWithTwoPointsInEnv : x1 %d y1 %d x2 %d y2 %d\n", xPointFirst, yPointFirst, xPointSecond, yPointSecond);
-		  );
+  DebugCode (
+             printf("DrawLineWithTwoPointsInEnv : x1 %d y1 %d x2 %d y2 %d\n", xPointFirst, yPointFirst, xPointSecond, yPointSecond);
+             fflush(stdout);
+             );
   /* to confirm the obstacle is in the width we assert the following my need to convert to if  */
   assert(GetEnvLength(environment) >= xPointFirst && xPointFirst >= 0);
   assert(GetEnvWidth(environment) >= yPointFirst && yPointFirst >= 0);
@@ -426,14 +427,18 @@ static void
 BoundaryFillInEnv(int xStart, int yStart, int neighbourNum, t_EnvironmentPtr environment)
 {
   assert(neighbourNum == 4);
-  assert(IsEnvPointValid(xStart, yStart, environment) && !IsEnvMemberObstacle(GetEnvMember(xStart, yStart, environment)));
+  DebugCode (
+             printf("BoundaryFillInEnv : xStart %d yStart %d\n", xStart, yStart);
+             fflush(stdout);
+             );
+  /* assert(IsEnvPointValid(xStart, yStart, environment) && !IsEnvMemberObstacle(GetEnvMember(xStart, yStart, environment))); */
   BoundaryFillFourInEnv(xStart, yStart, environment);
 }
 
 static void
 BoundaryFillFourInEnv(int xStart, int yStart, t_EnvironmentPtr environment)
 {
-  int i;
+  unsigned long i;
   int x[4] = {-1, 1, 0, 0};
   int y[4] = {0, 0, -1, 1};
 
@@ -547,6 +552,9 @@ InitialEnvWithCell(int length, int width, int lengthOfUnit, int widthOfUnit, int
   xIndex = length / lengthOfUnit + 1; /* cos the length is indeed to be double type so plus 1 */
   yIndex = width / widthOfUnit + 1;
 
+  DebugCode (
+             printf("InitialEnvWithCell : x %d y%d\n", xIndex, yIndex);
+             );
   environment = CreateEnvironment(xIndex, yIndex);
   InitialEnvironment(xIndex, yIndex, xTopLeft, yTopLeft, xBottomRight, yBottomRight, lengthOfUnit, widthOfUnit, environment);
   for (i = 0; i < xIndex; i++)
@@ -1025,4 +1033,21 @@ DrawEnvironmentPicture(t_EnvironmentPtr environment)
     }
     printf("\n");
   }
+}
+
+void
+FreeEnvMember(t_EnvironmentMemberPtr member)
+{
+  free(member);
+}
+
+t_EnvironmentMemberPtr
+CreateEnvMemberWithCost(int cost)
+{
+  t_EnvironmentMemberPtr member;
+
+  member = Malloc(sizeof(struct t_EnvMember));
+  member->m_cost = cost;
+  member->m_prevPtr = NULL;
+  return member;
 }

@@ -99,7 +99,7 @@ GetFinalPointNext(t_PathPointPtr pathPoint)
 }
 
 void
-PrintGpsPathLines(t_PathLinesPtr finalPathLines)
+PrintFinalPathLines(t_PathLinesPtr finalPathLines, char *str)
 {
   int i, count;
   t_PathPointPtr pathPoints;
@@ -108,8 +108,15 @@ PrintGpsPathLines(t_PathLinesPtr finalPathLines)
     count = GetFinalLinePointCount(finalPathLines);
     pathPoints = GetFinalLinePoints(finalPathLines);
     for (i = 0; i < count; i++) {
-      printf("The %d nd point is x %d y %d\n", i, GetFinalPointLon(pathPoints), GetFinalPointLat(pathPoints));
+      printf("%s : the %d nd point x %d y %d\n", str, i, GetFinalPointLon(pathPoints), GetFinalPointLat(pathPoints));
       pathPoints = GetFinalPointNext(pathPoints);
     }
   }
 }
+
+void
+PrintGpsPathLines(t_PathLinesPtr finalPathLines)
+{
+  PrintFinalPathLines(finalPathLines, "The gps path line");
+}
+

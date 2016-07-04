@@ -11,7 +11,7 @@
 #include "GetChangeEnv.h"
 
 
-#define c_priorityQueueSize 800
+#define c_priorityQueueSize 2
 
 
 struct t_HeapStruct

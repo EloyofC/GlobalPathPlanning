@@ -37,10 +37,15 @@ static t_PathLineMemsPtr sg_distributedPoints = NULL; /* for distribute points *
 static t_NearestQueuePtr sg_nearQueue = NULL; /* for the search nearest free point */
 
 
-static int GetTestGpsX(t_EnvironmentPtr environment);
+static t_PathLinesPtr GetEnvPathLines();
+static void TurnEnv2GpsPathLines(t_PathLinesPtr finalPathLines, t_EnvironmentPtr environment);
+static void TurnEnvX2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment);
+static void TurnEnvY2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment);
+static int GetFinalPathPointX(t_PathPointPtr finalPathPoint);
+static int GetFinalPathPointY(t_PathPointPtr finalPathPoint);
+static void SetFinalPathPointX(int x, t_PathPointPtr finalPathPoint);
+static void SetFinalPathPointY(int y, t_PathPointPtr finalPathPoint);
 static int AstarInlocal(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr environment);
-static int GetPathLineGpsX(t_EnvironmentPtr environment);
-static int GetPathLineGpsY(t_EnvironmentPtr environment);
 static void NextPathLinePoint(void);
 static int IsEnvPathLineEmpty(void);
 static void InsertNewFinalPathPoint(int x, int y, t_PathLinesPtr finalPathLines);
@@ -248,7 +253,7 @@ SearchFourNeighbour(t_EnvironmentMemberPtr member, t_EnvironmentPtr environment)
   int yIndex = GetEnvMemberY(member);
   int x[4] = {-1, 1, 0, 0};	/* search in four directions */
   int y[4] = {0, 0, -1, 1};
-  int i;
+  unsigned long i;
 
  for (i=0; i < sizeof(x)/sizeof(int); i++)
    SearchOneNode(xIndex + x[i], yIndex + y[i], environment);
@@ -456,19 +461,19 @@ PrintPathPoints(t_PathLineMemsPtr pathLine, char *str)
   static int i = 0;
 
   for (memberPrev = pathLine; memberPrev != NULL; memberPrev = memberPrev->m_prevPtr)
-    printf("PrintPathPoints : the %d nd %s %d %d %d\n", i++, str, memberPrev->m_xIndex, memberPrev->m_yIndex, memberPrev->m_cost);
+    printf("%s : the %d nd point x %d y %d cost %d\n", str, i++, memberPrev->m_xIndex, memberPrev->m_yIndex, memberPrev->m_cost);
 }
 
 static void
 PrintPathFreePoints(t_PathLineMemsPtr pathLine)
 {
-  PrintPathPoints(pathLine, "The pass free point is");
+  PrintPathPoints(pathLine, "The pass free point");
 }
 
 static void
 PrintPathFinalPoints(t_PathLineMemsPtr pathLine)
 {
-  PrintPathPoints(pathLine, "The final pass point is");
+  PrintPathPoints(pathLine, "The final pass point");
 }
 
 static t_PathLineMemsPtr
@@ -496,54 +501,6 @@ PrintAndFreePathLine(void)
 {
   PrintPathFinalPoints(sg_pathLines);
   sg_pathLines = FreePathLine(sg_pathLines);
-}
-
-/*
-  the element x in the map is bigger than the topleft point and the y is smaller than the topleft point
-  the formual: longitude = curlongi + x / (111.3 * math.cos(math.radians(curlat)))/ 1000(parameter is m)
-  latitude = curlat - y/111.3/1000
-  Remember that the answer is ought to inhance 10^7 like 1200291593, the remember that the angle is like 120.0291593
-*/
-static int
-GetPathLineGpsX(t_EnvironmentPtr environment)
-{
-  int x, xGps;
-  double shift, lona;
-
-  x = GetPathLineX() * GetEnvLengthOfUnit(environment);
-  x *= pow(10, 4);
-  lona = (double)GetEnvTopLeftY(environment)/pow(10,7);
-  shift = x / (111 * cos(Angle2Radians(lona)));
-  shift = SimpleDoubleAbs(shift);
-  xGps = GetEnvTopLeftX(environment) + (int)shift;
-  return xGps;
-}
-
-static int
-GetTestGpsX(t_EnvironmentPtr environment)
-{
-  int x, xGps;
-  double shift, lona;
-
-  x = GetEnvLength(environment) * GetEnvLengthOfUnit(environment);
-  x *= pow(10, 4);
-  lona = (double)GetEnvTopLeftY(environment)/pow(10,7);
-  shift = x / (111 * cos(Angle2Radians(lona)));
-  shift = SimpleDoubleAbs(shift);
-  xGps = GetEnvTopLeftX(environment) + (int)shift;
-  return xGps;
-}
-
-static int
-GetPathLineGpsY(t_EnvironmentPtr environment)
-{
-  int y;
-  double shift;
-
-  y = GetPathLineY() * GetEnvWidthOfUnit(environment);
-  y *= pow(10, 4);
-  shift = y / 111;
-  return GetEnvTopLeftY(environment) - (int) shift;
 }
 
 static int
@@ -605,20 +562,78 @@ IsEnvPathLineEmpty(void)
   return sg_pathLines == NULL;
 }
 
-t_PathLinesPtr
-GetGpsPathLines(t_EnvironmentPtr environment)
+static t_PathLinesPtr
+GetEnvPathLines()
 {
   t_PathLinesPtr finalPathLines;
   int x, y;
 
   finalPathLines = InitialFinalPathLines();
   for (; !IsEnvPathLineEmpty(); NextPathLinePoint()) {
-    x = GetPathLineGpsX(environment);
-    y = GetPathLineGpsY(environment);
+    x = GetPathLineX();
+    y = GetPathLineY();
     InsertNewFinalPathPoint(x, y, finalPathLines);
     FilterPathLinePoints();
   }
   return finalPathLines;
+}
+
+t_PathLinesPtr
+GetGpsPathLines(t_EnvironmentPtr environment)
+{
+  t_PathLinesPtr finalPathLines;
+
+  finalPathLines = GetEnvPathLines();
+  DebugCode (
+             PrintFinalPathLines(finalPathLines, "The env pass point");
+             );
+  TurnEnv2GpsPathLines(finalPathLines, environment);
+  return finalPathLines;
+}
+
+static void
+TurnEnv2GpsPathLines(t_PathLinesPtr finalPathLines, t_EnvironmentPtr environment)
+{
+  t_PathPointPtr finalPathPoints;
+
+  for (finalPathPoints = finalPathLines->m_pathPoints; finalPathPoints != NULL; finalPathPoints = finalPathPoints->m_next) {
+    TurnEnvX2Gps(finalPathPoints, environment);
+    TurnEnvY2Gps(finalPathPoints, environment);
+  }
+}
+
+/*
+  the element x in the map is bigger than the topleft point and the y is smaller than the topleft point
+  the formual: longitude = curlongi + x / (111.3 * math.cos(math.radians(curlat)))/ 1000(parameter is m)
+  latitude = curlat - y/111.3/1000
+  Remember that the answer is ought to inhance 10^7 like 1200291593, the remember that the angle is like 120.0291593
+*/
+static void
+TurnEnvX2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment)
+{
+  int x, xGps;
+  double shift, lona;
+
+  x = GetFinalPathPointX(finalPathPoint) * GetEnvLengthOfUnit(environment);
+  x *= pow(10, 4);
+  lona = (double)GetEnvTopLeftY(environment)/pow(10,7);
+  shift = x / (111 * cos(Angle2Radians(lona)));
+  shift = SimpleDoubleAbs(shift);
+  xGps = GetEnvTopLeftX(environment) + (int)shift;
+  SetFinalPathPointX(xGps, finalPathPoint);
+}
+
+static void
+TurnEnvY2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment)
+{
+  int y, yGps;
+  double shift;
+
+  y =  GetFinalPathPointY(finalPathPoint) * GetEnvWidthOfUnit(environment);
+  y *= pow(10, 4);
+  shift = y / 111;
+  yGps = GetEnvTopLeftY(environment) - (int) shift;
+  SetFinalPathPointY(yGps, finalPathPoint);
 }
 
 static void
@@ -735,4 +750,28 @@ InsertNewFinalPathPoint(int x, int y, t_PathLinesPtr finalPathLines)
   finalPointNew->m_next = finalPathLines->m_pathPoints;
   finalPathLines->m_pathPoints = finalPointNew;
   finalPathLines->m_pointCounts++;
+}
+
+static int
+GetFinalPathPointX(t_PathPointPtr finalPathPoint)
+{
+  return finalPathPoint->m_lon;
+}
+
+static int
+GetFinalPathPointY(t_PathPointPtr finalPathPoint)
+{
+  return finalPathPoint->m_lat;
+}
+
+static void
+SetFinalPathPointX(int x, t_PathPointPtr finalPathPoint)
+{
+  finalPathPoint->m_lon = x;
+}
+
+static void
+SetFinalPathPointY(int y, t_PathPointPtr finalPathPoint)
+{
+  finalPathPoint->m_lat = y;
 }

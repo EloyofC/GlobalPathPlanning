@@ -13,6 +13,8 @@ struct t_EnvironmentInfo;
 typedef struct t_EnvironmentInfo *t_EnvironmentPtr;
 typedef struct t_Obstacles *t_ObstaclesPtr;
 
+t_EnvironmentMemberPtr CreateEnvMemberWithCost(int cost); /* for the test function */
+void FreeEnvMember(t_EnvironmentMemberPtr member);        /* for test function */
 t_EnvironmentPtr InitialEnvWithGps(int lengthOfUnit, int widthOfUnit, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight);
 void SetObstaclesInEnvironment(t_ObstaclesPtr obstacles, t_EnvironmentPtr newEnvironment);
 void PrintEnvironment(t_EnvironmentPtr environment);
