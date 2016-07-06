@@ -7,9 +7,10 @@ else
 endif
 
 objects = advancedplan.o localplanning.o pretreatment.o heaparray.o publicfun.o mission.o
+unittests = test_heaparray.o test_publicfun.o
 testsample = test.c
 
-all : libmission.a test test_heaparray
+all : libmission.a test test_heaparray test_publicfun
 test : $(testsample) PathAndShow.h libmission.a
 	$(CC) -o $@ $(CFLAGS) test.c -L. -lmission -lm
 
@@ -18,6 +19,9 @@ libmission.a : $(objects)
 
 test_heaparray : test_heaparray.o libmission.a
 	$(CC) -o $@ $(CFLAGS) test_heaparray.o -L. -lmission -lm
+
+test_publicfun : test_publicfun.o libmission.a
+	$(CC) -o $@ $(CFLAGS) test_publicfun.o -L. -lmission -lm
 
 mission.o : GetChangeEnv.h ComPlan.h PublicFun.h PathAndShow.h localplanning.o publicfun.o pretreatment.o
 advancedplan.o : GetChangeEnv.h ComPlan.h PublicFun.h localplanning.o heaparray.o publicfun.o
@@ -29,7 +33,7 @@ test_heaparray.o : heaparray.o HeapQueue.h PublicFun.h
 
 .PHONY : clean
 clean :
-	rm test $(objects) libmission.a
+	rm test $(objects) $(unittests) libmission.a
 
 .PHONY : cleanall
 cleanall :

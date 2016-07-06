@@ -19,12 +19,12 @@
 #endif
 
 void *Malloc(size_t size);
+void Free(void *p);
 int CalGpsDistanceLon(int lonFirst, int latFirst, int lonSecond, int latSecond);
 int CalGpsDistanceLat(int lonFirst, int latFirst, int lonSecond, int latSecond);
-int SimpleIntAbs(int num);
 double Angle2Radians(double angle);
 void SwapNum(int *a, int *b);
 int IsDoubleEqual(double x1, double x2);
-double SimpleDoubleAbs(double x);
+int IsDoubleEqualWithTolerance(double x1, double x2, double epsilon);
 
 #endif

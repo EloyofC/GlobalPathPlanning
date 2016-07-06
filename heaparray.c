@@ -11,7 +11,7 @@
 #include "GetChangeEnv.h"
 
 
-#define c_priorityQueueSize 2
+#define c_priorityQueueSize 3
 
 
 struct t_HeapStruct
@@ -81,7 +81,7 @@ InsertPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_ElementTy
     return queue;
   }
 
-  for (i = queue->m_index++; cmp(queue->m_elementsPtr[GetFather(i)], X) && i > 0; i = GetFather(i)) {
+  for (i = queue->m_index++; i > 0 && cmp(queue->m_elementsPtr[GetFather(i)], X); i = GetFather(i)) {
     queue->m_elementsPtr[i] = queue->m_elementsPtr[GetFather(i)];
   }
   queue->m_elementsPtr[i] = X;
@@ -105,7 +105,10 @@ MakeQueueBigger(t_PriorityQueuePtr queue)
     priorityQueueNew->m_elementsPtr[i] = queue->m_elementsPtr[i];
   }
 
-  free(queue);
+  t_ElementTypePtr *elementsp;
+  elementsp = queue->m_elementsPtr;
+  Free(elementsp);
+  Free(queue);
   return  priorityQueueNew;
 }
 
@@ -155,18 +158,20 @@ DestroyPriorityQueue(t_PriorityQueuePtr queue)
   t_ElementTypePtr *elementsp;
 
   elementsp = queue->m_elementsPtr;
-  free(elementsp);
-  free(queue);
+  Free(elementsp);
+  Free(queue);
 }
 
 static int
 GetLeftChild(int fatherIndex)
 {
+  assert(fatherIndex >= 0);
   return 2 * fatherIndex + 1;
 }
 
 static int
 GetFather(int childIndex)
 {
+  assert(childIndex >= 1);
   return (childIndex - 1) / 2;
 }

@@ -317,8 +317,8 @@ DrawDiagonalInEnv(int xPointFirst, int yPointFirst, int xPointSecond, int yPoint
   int xDistance, yDistance;
   double gapRatio;
 
-   xDistance = SimpleIntAbs(xPointFirst - xPointSecond);
-   yDistance = SimpleIntAbs(yPointFirst - yPointSecond);
+   xDistance = abs(xPointFirst - xPointSecond);
+   yDistance = abs(yPointFirst - yPointSecond);
    gapRatio = (double)yDistance / (double)xDistance;
    DebugCodeDetail(
 		   printf("DrawDiagonalInEnv : xDis %d yDis %d gapRation %f\n", xDistance, yDistance, gapRatio);

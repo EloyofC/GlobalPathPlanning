@@ -9,13 +9,13 @@
 typedef struct t_Obstacles
 {
   int m_obstacleCounts;
-  struct t_SingleObstacle *m_obstacleMembersPtr;
+  struct t_SingleObstacle *m_obstacleMembersPtr; /* an array of struct t_SingleObstacle */
 } *t_ObstaclesPtr;
 
 typedef struct t_SingleObstacle
 {
   int m_vertexCounts;
-  struct t_PointCor *m_pointsPtr;
+  struct t_PointCor *m_pointsPtr; /* an array of struct t_PointCor */
 } *t_SingleObstaclePtr;
 
 typedef struct t_PointCor

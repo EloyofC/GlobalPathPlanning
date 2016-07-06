@@ -9,6 +9,8 @@ static void SetSingleObstacleCount(int count, t_SingleObstaclePtr singleObstacle
 static t_SingleObstaclePtr CreateSingleObstacleArray(int size);
 static t_ObstaclesPtr CreateObstacles(void);
 static void SetObstaclesCount(int count, t_ObstaclesPtr obstacles);
+static int GetObstacleCount(t_ObstaclesPtr obstacles);
+static int GetVertexCount(t_SingleObstaclePtr singleObstacle);
 static t_PointCorPtr GetNextPoint(t_PointCorPtr point);
 static int TestSingleObstacle(void);
 static int TestNoObstacle(void);
@@ -17,6 +19,10 @@ static void InsertSingleObstacle(unsigned int size, int *x, int *y, t_SingleObst
 static t_SingleObstaclePtr GetSingleObstacle(int index, t_ObstaclesPtr obstacles);
 static int TestTwoObstacle(void);
 static t_ObstaclesPtr GetSingleObstacleInArea(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight);
+static void FreeObstacles(t_ObstaclesPtr obstacles);
+static void FreeSingleObstacle(t_SingleObstaclePtr singleObstacle);
+static t_PointCorPtr GetVertex(int i, t_SingleObstaclePtr singleObstacle);
+static void FreePoint(t_PointCorPtr point);
 
 int main(int argc, char *argv[])
 {
@@ -80,6 +86,7 @@ TestTemplate(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRi
   t_PathLinesPtr pathLines;
 
   pathLines = DoCruiseGeneral(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width, obstacles);
+  FreeObstacles(obstacles);
   if (pathLines != NULL) {
     PrintGpsPathLines(pathLines);
     FreeFinalPathLines(pathLines);
@@ -148,10 +155,34 @@ SetSingleObstacleCount(int count, t_SingleObstaclePtr singleObstacle)
   singleObstacle->m_vertexCounts = count;
 }
 
+static int
+GetVertexCount(t_SingleObstaclePtr singleObstacle)
+{
+  return singleObstacle->m_vertexCounts;
+}
+
+static int
+GetObstacleCount(t_ObstaclesPtr obstacles)
+{
+  return obstacles->m_obstacleCounts;
+}
+
 static t_SingleObstaclePtr
 CreateSingleObstacleArray(int size)
 {
   return (t_SingleObstaclePtr)Malloc(size * sizeof(struct t_SingleObstacle));
+}
+
+static t_SingleObstaclePtr
+GetSingleObstacleArray(t_ObstaclesPtr obstacles)
+{
+  return obstacles->m_obstacleMembersPtr;
+}
+
+static t_PointCorPtr
+GetPointArray(t_SingleObstaclePtr singleObstacle)
+{
+  return singleObstacle->m_pointsPtr;
 }
 
 static t_SingleObstaclePtr
@@ -167,9 +198,39 @@ CreateObstacles(void)
 }
 
 static void
+FreeObstacles(t_ObstaclesPtr obstacles)
+{
+  if (obstacles == NULL) {
+    return;
+  }
+
+  int count = GetObstacleCount(obstacles);
+  t_SingleObstaclePtr singleObstacle;
+
+  for (int i=0; i < count; i++) {
+    singleObstacle = GetSingleObstacle(i, obstacles);
+    FreeSingleObstacle(singleObstacle);
+  }
+  Free(GetSingleObstacleArray(obstacles));
+  Free(obstacles);
+}
+
+static void
+FreeSingleObstacle(t_SingleObstaclePtr singleObstacle)
+{
+  Free(GetPointArray(singleObstacle));
+}
+
+static void
 SetObstaclesCount(int count, t_ObstaclesPtr obstacles)
 {
   obstacles->m_obstacleCounts = count;
+}
+
+static t_PointCorPtr
+GetVertex(int i, t_SingleObstaclePtr singleObstacle)
+{
+  return singleObstacle->m_pointsPtr + i;
 }
 
 static t_PointCorPtr

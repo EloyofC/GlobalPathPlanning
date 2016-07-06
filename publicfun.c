@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 #include "PublicFun.h"
 
 #define c_earthRadius 6371004.0
@@ -28,6 +29,12 @@ Malloc(size_t size)
   } else {
     return MallocResult;
   }
+}
+
+void
+Free(void *p)
+{
+  free(p);
 }
 
 /*  The original gps is * 10^7
@@ -78,17 +85,9 @@ StupidAngle2Radians(double angle)
 double
 Angle2Radians(double angle)
 {
+  assert(angle <= 180 && angle >= -180);
   return angle * c_pi / 180;
 }
-
-int
-SimpleIntAbs(int num)
-{
-  if (num < 0)
-    num = -1 * num;
-  return num;
-}
-
 
 void
 SwapNum(int *a, int *b)
@@ -103,13 +102,11 @@ SwapNum(int *a, int *b)
 int
 IsDoubleEqual(double x1, double x2)
 {
-  return SimpleDoubleAbs(x1 - x2) < c_doubleEqualEpsilon;
+  return IsDoubleEqualWithTolerance(x1, x2, c_doubleEqualEpsilon);
 }
 
-double
-SimpleDoubleAbs(double x)
+int
+IsDoubleEqualWithTolerance(double x1, double x2, double epsilon)
 {
-  if (x < 0)
-    x = -1 * x;
-  return x;
+  return fabs(x1 - x2) < epsilon;
 }

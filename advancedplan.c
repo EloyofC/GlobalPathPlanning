@@ -13,7 +13,7 @@
 #include "PublicFun.h"
 #include "PathAndShow.h"
 
-#define c_queueSizeMin 500
+#define c_queueSizeMin 2
 
 typedef struct t_PathLineMember
 {
@@ -130,8 +130,8 @@ DepthFirstPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr 
   xHeuristic = GetEnvEndX(environment) - GetEnvMemberX(member);
   yHeuristic = GetEnvEndY(environment)-  GetEnvMemberY(member);
 
-  xHeuristic = SimpleIntAbs(xHeuristic);
-  yHeuristic = SimpleIntAbs(yHeuristic);
+  xHeuristic = abs(xHeuristic);
+  yHeuristic = abs(yHeuristic);
   return xHeuristic + yHeuristic;
 }
 
@@ -618,7 +618,7 @@ TurnEnvX2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment)
   x *= pow(10, 4);
   lona = (double)GetEnvTopLeftY(environment)/pow(10,7);
   shift = x / (111 * cos(Angle2Radians(lona)));
-  shift = SimpleDoubleAbs(shift);
+  shift = fabs(shift);
   xGps = GetEnvTopLeftX(environment) + (int)shift;
   SetFinalPathPointX(xGps, finalPathPoint);
 }
@@ -657,7 +657,7 @@ IsTwoPointsClose(int x1, int y1, int x2, int y2)
 static int
 IsTwoCorClose(int x, int y)
 {
-  return SimpleIntAbs(x-y) < 2;
+  return abs(x-y) < 2;
 }
 
 static int
@@ -670,8 +670,8 @@ IsThreePointInALine(int x1, int y1, int x2, int y2, int x3, int y3)
   } else {
     double delta1, delta2;
 
-    delta1 = (double) SimpleIntAbs(y1 - y2) / (double) (SimpleIntAbs(x1 - x2));
-    delta2 = (double) SimpleIntAbs(y2 - y3) / (double) (SimpleIntAbs(x2 - x3));
+    delta1 = (double) abs(y1 - y2) / (double) (abs(x1 - x2));
+    delta2 = (double) abs(y2 - y3) / (double) (abs(x2 - x3));
     return IsDoubleEqual(delta1, delta2);
   }
 }
