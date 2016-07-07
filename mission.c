@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "GetChangeEnv.h"
-#include "PathAndShow.h"
-#include "PublicFun.h"
-#include "ComPlan.h"
+#include "pretreatment.h"
+#include "mission.h"
+#include "publicfun.h"
+#include "advancedplan.h"
 
 #define c_lengthOfUnit 100
 #define c_widthOfUnit 100
@@ -25,10 +25,10 @@ DoCruiseGeneral(int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLe
   t_EnvironmentPtr newEnvironment;
   t_PathLinesPtr pathLines;
 
-  cellStartX = CalGpsDistanceLon(lonTopLeft, latTopLeft, lonStart, latStart) / c_lengthOfUnit;
-  cellStartY = CalGpsDistanceLat(lonTopLeft, latTopLeft, lonStart, latStart) / c_widthOfUnit;
-  cellEndX =  CalGpsDistanceLon(lonTopLeft, latTopLeft, lonEnd, latEnd) / c_lengthOfUnit;
-  cellEndY =  CalGpsDistanceLat(lonTopLeft, latTopLeft, lonEnd, latEnd) / c_widthOfUnit;
+  cellStartX = CalGpsDistanceLon(lonTopLeft, latTopLeft, lonStart) / c_lengthOfUnit;
+  cellStartY = CalGpsDistanceLat(lonTopLeft, latTopLeft, latStart) / c_widthOfUnit;
+  cellEndX =  CalGpsDistanceLon(lonTopLeft, latTopLeft, lonEnd) / c_lengthOfUnit;
+  cellEndY =  CalGpsDistanceLat(lonTopLeft, latTopLeft, latEnd) / c_widthOfUnit;
   cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
   newEnvironment = InitialEnvWithGps(c_lengthOfUnit, c_widthOfUnit, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
   SetObstaclesInEnvironment(obstacles, newEnvironment);

@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "miniunit.h"
-#include "HeapQueue.h"
-#include "PublicFun.h"
-#include "GetChangeEnv.h"
-#include "heaparray.c"
+#include "heapqueue.h"
+#include "publicfun.h"
+#include "pretreatment.h"
+#include "heapqueue.c"
 
 int tests_run = 0;
 
@@ -30,7 +30,7 @@ static char* test_GetFatherTemplate(int child, int father)
   return 0;
 }
 
-static char* test_GetFather()
+static char* test_GetFather(void)
 {
   int father1 = 0;
   int leftChild1 = 1, rightChild1 = 2;
@@ -51,7 +51,7 @@ static char* test_GetLeftChildTemplate(int child, int father)
   return 0;
 }
 
-static char* test_GetLeftChild()
+static char* test_GetLeftChild(void)
 {
   int father1 = 0;
   int leftChild1 = 1;
@@ -64,7 +64,7 @@ static char* test_GetLeftChild()
   return 0;
 }
 
-static char* test_IsQueueFull()
+static char* test_IsQueueFull(void)
 {
   t_PriorityQueuePtr queue;
   t_EnvironmentMemberPtr memIn, memOut;
@@ -110,7 +110,7 @@ static char* test_PriorityQueueTemplate(int *test, unsigned long length, int *so
   return 0;
 }
 
-static char* test_PriorityQueue()
+static char* test_PriorityQueue(void)
 {
   int test1[8] = {1, 3, 5, 7, 9, 35, 78, 89};
   int sorted1[8];
@@ -134,7 +134,8 @@ static char* test_PriorityQueue()
   return 0;
 }
 
-static char* all_tests(){
+static char* all_tests(void)
+{
   mu_run_test(test_PriorityQueue);
   mu_run_test(test_GetFather);
   mu_run_test(test_GetLeftChild);

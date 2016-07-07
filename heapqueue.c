@@ -3,12 +3,13 @@
   Author: Green
   Date: 16/06/02
  */
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "HeapQueue.h"
-#include "PublicFun.h"
-#include "GetChangeEnv.h"
+#include "heapqueue.h"
+#include "publicfun.h"
+#include "pretreatment.h"
 
 
 #define c_priorityQueueSize 3

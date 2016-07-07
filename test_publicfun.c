@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "miniunit.h"
-#include "PublicFun.h"
+#include "publicfun.h"
 #include "publicfun.c"
 
 int tests_run = 0;
@@ -14,7 +14,7 @@ static char* test_SwapNumTemplate(int a1, int b1)
   return 0;
 }
 
-static char* test_SwapNum()
+static char* test_SwapNum(void)
 {
   test_SwapNumTemplate(-1, 1);
   test_SwapNumTemplate(0, 0);
@@ -27,7 +27,7 @@ static char* test_IsDoubleEqualTemplate(double x1, double x2, int isFalse)
   return 0;
 }
 
-static char* test_IsDoubleEqual()
+static char* test_IsDoubleEqual(void)
 {
   test_IsDoubleEqualTemplate(10.00000002, 10.00000001, 0);
   test_IsDoubleEqualTemplate(19.0, 19.02, 1);
@@ -40,7 +40,7 @@ static char* test_IsDoubleEqualWithToleranceTemplate(double x1, double x2, doubl
   return 0;
 }
 
-static char* test_IsDoubleEqualWithTolerance()
+static char* test_IsDoubleEqualWithTolerance(void)
 {
   test_IsDoubleEqualWithToleranceTemplate(10.2, 10.1, 0.2, 0);
   test_IsDoubleEqualWithToleranceTemplate(19.00, 19.02, 0.01, 1);
@@ -54,7 +54,7 @@ static char* test_Angle2RadiansTemplate(double angle, double radians)
   return 0;
 }
 
-static char* test_Angle2Radians()
+static char* test_Angle2Radians(void)
 {
   test_Angle2RadiansTemplate(0, 0);
   test_Angle2RadiansTemplate(30, 0.523599);
@@ -69,7 +69,7 @@ static char* test_CalGpsDistanceTemplate(int lonFirst, int latFirst, int lonSeco
   return 0;
 }
 
-static char* test_CalGpsDistance()
+static char* test_CalGpsDistance(void)
 {
   test_CalGpsDistanceTemplate(1206480644, 380044038, 1208053971, 378817969, 19418);
   return 0;
@@ -77,29 +77,29 @@ static char* test_CalGpsDistance()
 
 static char* test_CalGpsDistanceLonTemplate(int lonFirst, int latFirst, int lonSecond, int latSecond, int lonDistance)
 {
-  int calLonDistance = CalGpsDistanceLon(lonFirst, latFirst, lonSecond, latSecond);
+  int calLonDistance = CalGpsDistanceLon(lonFirst, latFirst, lonSecond);
   mu_assert("error, calgpsdistancelon is not right", abs(calLonDistance - lonDistance) < 5);
   return 0;
 }
 
-static char* test_CalGpsDistanceLon(){
+static char* test_CalGpsDistanceLon(void){
   test_CalGpsDistanceLonTemplate(1206480644, 380044038, 1208053971, 378817969, 13800);
   return 0;
 }
 
 static char* test_CalGpsDistanceLatTemplate(int lonFirst, int latFirst, int lonSecond, int latSecond, int latDistance)
 {
-  int calLatDistance = CalGpsDistanceLat(lonFirst, latFirst, lonSecond, latSecond);
+  int calLatDistance = CalGpsDistanceLat(lonFirst, latFirst, latSecond);
   mu_assert("error, calgpsdistancelon is not right", abs(calLatDistance - latDistance) < 5);
   return 0;
 }
 
-static char* test_CalGpsDistanceLat(){
+static char* test_CalGpsDistanceLat(void){
   test_CalGpsDistanceLatTemplate(1206480644, 380044038, 1208053971, 378817969, 13648);
   return 0;
 }
 
-static char* all_tests()
+static char* all_tests(void)
 {
   mu_run_test(test_SwapNum);
   mu_run_test(test_IsDoubleEqual);

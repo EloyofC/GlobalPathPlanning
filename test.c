@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include "PublicFun.h"
-#include "PathAndShow.h"
+#include "publicfun.h"
+#include "mission.h"
 
-static t_ObstaclesPtr GetObstaclesInArea(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight);
+static t_ObstaclesPtr GetTwoObstaclesInArea(int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight);
 static void InsertPoint(int lon, int lat, t_PointCorPtr point);
 static t_PointCorPtr CreatePointArray(int size);
 static void SetSingleObstacleCount(int count, t_SingleObstaclePtr singleObstacle);
@@ -22,13 +22,11 @@ static t_ObstaclesPtr GetSingleObstacleInArea(int lonTopLeft, int latTopLeft, in
 static void FreeObstacles(t_ObstaclesPtr obstacles);
 static void FreeSingleObstacle(t_SingleObstaclePtr singleObstacle);
 static t_PointCorPtr GetVertex(int i, t_SingleObstaclePtr singleObstacle);
-static void FreePoint(t_PointCorPtr point);
 
 int main(int argc, char *argv[])
 {
   return TestSingleObstacle();
 }
-
 
 static int
 TestNoObstacle(void)
@@ -76,7 +74,7 @@ TestTwoObstacle(void)
   width = 500;
   printf("The start point is x %d y %d\n", lonTopLeft, latTopLeft);
   printf("The end point is x %d y %d\n", lonBottomRight, latBottomRight);
-  obstacles = GetObstaclesInArea(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
+  obstacles = GetTwoObstaclesInArea(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
   return TestTemplate(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, width, obstacles);
 }
 
@@ -153,12 +151,6 @@ static void
 SetSingleObstacleCount(int count, t_SingleObstaclePtr singleObstacle)
 {
   singleObstacle->m_vertexCounts = count;
-}
-
-static int
-GetVertexCount(t_SingleObstaclePtr singleObstacle)
-{
-  return singleObstacle->m_vertexCounts;
 }
 
 static int

@@ -8,12 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "ComPlan.h"
-#include "GetChangeEnv.h"
-#include "PublicFun.h"
-#include "PathAndShow.h"
-
-#define c_queueSizeMin 2
+#include "advancedplan.h"
+#include "localplanning.h"
+#include "pretreatment.h"
+#include "publicfun.h"
+#include "fifoqueue.h"
+#include "mission.h"
 
 typedef struct t_PathLineMember
 {
@@ -23,21 +23,12 @@ typedef struct t_PathLineMember
   struct t_PathLineMember *m_prevPtr;
 } *t_PathLineMemsPtr;
 
-typedef struct t_NearQueue
-{
-  int m_size;
-  int m_index;
-  int m_frontptr;
-  int m_tailptr;
-  t_EnvironmentMemberPtr *m_queuePtr;
-} *t_NearestQueuePtr;
-
 static t_PathLineMemsPtr sg_pathLines = NULL; /* for getting the partial search path  */
 static t_PathLineMemsPtr sg_distributedPoints = NULL; /* for distribute points */
-static t_NearestQueuePtr sg_nearQueue = NULL; /* for the search nearest free point */
+static t_FifoQueuePtr sg_nearQueue = NULL; /* for the search nearest free point */
 
 
-static t_PathLinesPtr GetEnvPathLines();
+static t_PathLinesPtr GetEnvPathLines(void);
 static void TurnEnv2GpsPathLines(t_PathLinesPtr finalPathLines, t_EnvironmentPtr environment);
 static void TurnEnvX2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment);
 static void TurnEnvY2Gps(t_PathPointPtr finalPathPoint, t_EnvironmentPtr environment);
@@ -57,13 +48,8 @@ static void PrintPathFreePoints(t_PathLineMemsPtr pathLine);
 static void PrintPathFinalPoints(t_PathLineMemsPtr pathLine);
 static void PrintPathPoints(t_PathLineMemsPtr pathLine, char *str);
 static t_PathLineMemsPtr FreePathLine(t_PathLineMemsPtr pathLine);
-static int IsQueueFull(void);
-static int IsQueueEmpty(void);
-static void FreeNearestQueue(void);
-static t_EnvironmentMemberPtr DeNearQueue(void);
-static void EnNearQueue(t_EnvironmentMemberPtr memberNew);
-static void MakeQueueBigger(void);
-static void InitialNearQueue(void);
+
+
 static void GetDistributedPoints(int xStart, int yStart, int xEnd, int yEnd, int width, t_EnvironmentPtr environment);
 static int GetDistributedFreePoints(int xStart, int yStart, int xEnd, int yEnd, int width, t_EnvironmentPtr environment);
 static int UpdateNearestFreePoint(t_PathLineMemsPtr member, t_EnvironmentPtr environment);
@@ -73,8 +59,8 @@ static void SearchFourNeighbour(t_EnvironmentMemberPtr member, t_EnvironmentPtr 
 static void SearchOneNode(int xIndex, int yIndex, t_EnvironmentPtr environment);
 
 static t_PathLineMemsPtr AppendLine(t_PathLineMemsPtr pathLineFirst, t_PathLineMemsPtr pathLineSecond); /* performance bug */
-static int DijskstraPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment);
-static int DepthFirstPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment);
+static int DijskstraPriority(int costNew);
+static int DepthFirstPriority(t_EnvironmentMemberPtr member, t_EnvironmentPtr environment);
 static int AStarPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment);
 static int GetPathLineMemberX(t_PathLineMemsPtr pathLineMember);
 static int GetPathLineMemberY(t_PathLineMemsPtr pathLineMember);
@@ -117,13 +103,13 @@ GetPathLineMemberPrev(t_PathLineMemsPtr pathLineMember)
 }
 
 static int
-DijskstraPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment)
+DijskstraPriority(int costNew)
 {
   return costNew;
 }
 
 static int
-DepthFirstPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment)
+DepthFirstPriority(t_EnvironmentMemberPtr member, t_EnvironmentPtr environment)
 {
   int xHeuristic, yHeuristic;
 
@@ -139,8 +125,8 @@ DepthFirstPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr 
 static int
 AStarPriority(int costNew, t_EnvironmentMemberPtr member, t_EnvironmentPtr environment)
 {
-  return DijskstraPriority(costNew, member, environment) +
-    DepthFirstPriority(costNew, member, environment);
+  return DijskstraPriority(costNew) +
+    DepthFirstPriority(member, environment);
 }
 
 int
@@ -237,12 +223,12 @@ SearchNearestFreePoint(int xIndex, int yIndex, t_EnvironmentPtr environment)
 
   ResetEnvAllFlag(environment);
 
-  InitialNearQueue();
+  sg_nearQueue =  InitialFifoQueue();
 
-  for (member = GetEnvMember(xIndex, yIndex, environment); IsEnvMemberObstacle(member); member = DeNearQueue()) {
+  for (member = GetEnvMember(xIndex, yIndex, environment); IsEnvMemberObstacle(member); member = DeFifoQueue(sg_nearQueue)) {
     SearchFourNeighbour(member, environment);
   }
-  FreeNearestQueue();
+  FreeFifoQueue(sg_nearQueue);
   return member;
 }
 
@@ -268,95 +254,11 @@ SearchOneNode(int xIndex, int yIndex, t_EnvironmentPtr environment)
     member = GetEnvMember(xIndex, yIndex, environment);
     if (IsEnvMemberFlagNotSet(member)) {
       SetEnvMemberFlag(member);
-      EnNearQueue(member);
+      sg_nearQueue = EnFifoQueue(member, sg_nearQueue);
     }
   }
 }
 
-static void
-InitialNearQueue(void)
-{
-  if (sg_nearQueue == NULL) {
-    sg_nearQueue = Malloc(sizeof(struct t_NearQueue));
-    sg_nearQueue->m_queuePtr = Malloc(sizeof(t_EnvironmentMemberPtr) * c_queueSizeMin);
-    sg_nearQueue->m_size = c_queueSizeMin;
-    sg_nearQueue->m_index = sg_nearQueue->m_frontptr = sg_nearQueue->m_tailptr = 0;
-  }
-}
-
-static int
-IsQueueFull(void)
-{
-  return sg_nearQueue->m_size == sg_nearQueue->m_index;
-}
-
-static int
-IsQueueEmpty(void)
-{
-  return sg_nearQueue->m_index == 0;
-}
-
-static void
-FreeNearestQueue(void)
-{
-  free(sg_nearQueue->m_queuePtr);
-  free(sg_nearQueue);
-  sg_nearQueue = NULL;
-}
-
-static t_EnvironmentMemberPtr
-DeNearQueue(void)
-{
-  t_EnvironmentMemberPtr memberOut;
-
-  if (IsQueueEmpty()) {
-    fprintf(stderr, "NearQueue is Empty\n");
-    exit(0);
-  } else {
-    memberOut = (sg_nearQueue->m_queuePtr)[sg_nearQueue->m_frontptr];
-    sg_nearQueue->m_index -= 1;
-    sg_nearQueue->m_frontptr += 1;
-    if (sg_nearQueue->m_frontptr == sg_nearQueue->m_size) {
-      sg_nearQueue->m_frontptr = 0;
-    }
-    return memberOut;
-  }
-}
-
-static void
-EnNearQueue(t_EnvironmentMemberPtr memberNew)
-{
-  if (IsQueueFull()) {
-    MakeQueueBigger();
-  }
-
-  (sg_nearQueue->m_queuePtr)[sg_nearQueue->m_tailptr] = memberNew;
-  sg_nearQueue->m_index += 1;
-  sg_nearQueue->m_tailptr += 1;
-  if (sg_nearQueue->m_tailptr == sg_nearQueue->m_size) {
-    sg_nearQueue->m_tailptr = 0;
-  }
-}
-
-static void
-MakeQueueBigger(void)
-{
-  t_EnvironmentMemberPtr *newQueue;
-  int newSize = (sg_nearQueue->m_size) * 2;
-  int newPtr;
-
-
-  newQueue = Malloc(sizeof(t_EnvironmentMemberPtr) * newSize);
-  for (newPtr = 0; newPtr < sg_nearQueue->m_size; newPtr++) {
-    newQueue[newPtr] = (sg_nearQueue->m_queuePtr)[newPtr];
-  }
-
-  free(sg_nearQueue->m_queuePtr);
-  sg_nearQueue->m_queuePtr = newQueue;
-  sg_nearQueue->m_frontptr = 0;
-  sg_nearQueue->m_tailptr = sg_nearQueue->m_index;
-  sg_nearQueue->m_size = newSize;
-}
 
 static t_PathLineMemsPtr                     /* from the end to the start point  */
 StorePathLine(int xEnd, int yEnd, t_PathLineMemsPtr pathLine, t_EnvironmentPtr environment)
@@ -563,7 +465,7 @@ IsEnvPathLineEmpty(void)
 }
 
 static t_PathLinesPtr
-GetEnvPathLines()
+GetEnvPathLines(void)
 {
   t_PathLinesPtr finalPathLines;
   int x, y;

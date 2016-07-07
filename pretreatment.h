@@ -59,6 +59,7 @@ int IsEnvMemberFlagNotSet(t_EnvironmentMemberPtr member); /* to check whether th
 int IsEnvMemberObstacle(t_EnvironmentMemberPtr member); /* To see if the currentenvmember is obstacle */
 
 void ResetEnvAllFlag(t_EnvironmentPtr environment); /* flag is for potantial use, if u need to use it, this function set all the flag in environment to 1 */
+void ResetEnvironment(t_EnvironmentPtr environment); /* Reset all the members of the environment to initial value for another use */
 int IsSearchEnd(t_EnvironmentMemberPtr member, t_EnvironmentPtr environment);
 
 int IsEnvPointValid(int xIndex, int yIndex, t_EnvironmentPtr environment); /* to see if the point is not out of the env */

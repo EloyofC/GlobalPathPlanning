@@ -6,10 +6,11 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include "GetChangeEnv.h"
-#include "ComPlan.h"
-#include "HeapQueue.h"
-#include "PublicFun.h"
+#include "pretreatment.h"
+#include "advancedplan.h"
+#include "localplanning.h"
+#include "heapqueue.h"
+#include "publicfun.h"
 
 
 static t_EnvironmentMemberPtr GetEnvMemberInitial(int xStart, int yStart, t_EnvironmentPtr environment);
@@ -49,7 +50,12 @@ DoSomePathPlanning(int xStart, int yStart, int xEnd, int yEnd, int (* compute)(i
   DestroyPriorityQueue(planningQueue);
   return (member == NULL) ? 0 : 1; /* 0: no way exist may have several reasons ; 1: some way exist */
 }
-
+/**
+ *  \brief function description
+ This functon is to initial the for search with the start point
+ *  \param start point info and the environment to be searched
+ *  \return the start point envmember
+ */
 /* assume the initial space have no obstacle */
 static t_EnvironmentMemberPtr
 GetEnvMemberInitial(int xStart, int yStart, t_EnvironmentPtr environment)

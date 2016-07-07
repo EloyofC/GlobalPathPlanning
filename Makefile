@@ -1,4 +1,5 @@
 CC = gcc -g -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes
+LINKFLAGS = -L. -lmission -lm
 DEBUG ?= 0			#usage: make DEBUG=\d
 ifeq ($(DEBUG), 1)
 	CFLAGS = -O1 -DDEBUG
@@ -6,30 +7,34 @@ else
 	CFLAGS = -O2 -DNDEBUG
 endif
 
-objects = advancedplan.o localplanning.o pretreatment.o heaparray.o publicfun.o mission.o
-unittests = test_heaparray.o test_publicfun.o
+objects = advancedplan.o localplanning.o pretreatment.o heapqueue.o publicfun.o mission.o fifoqueue.o
+unittests = test_heapqueue.o test_publicfun.o test_fifoqueue.o
 testsample = test.c
 
-all : libmission.a test test_heaparray test_publicfun
-test : $(testsample) PathAndShow.h libmission.a
-	$(CC) -o $@ $(CFLAGS) test.c -L. -lmission -lm
+all : libmission.a test test_heapqueue test_publicfun
+test : $(testsample) libmission.a
+	$(CC) -o $@ $(CFLAGS) test.c $(LINKFLAGS)
 
 libmission.a : $(objects)
 	ar -rc $@ $^
 
-test_heaparray : test_heaparray.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_heaparray.o -L. -lmission -lm
+test_heapqueue : test_heapqueue.o libmission.a
+	$(CC) -o $@ $(CFLAGS) test_heapqueue.o $(LINKFLAGS)
 
 test_publicfun : test_publicfun.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_publicfun.o -L. -lmission -lm
+	$(CC) -o $@ $(CFLAGS) test_publicfun.o $(LINKFLAGS)
 
-mission.o : GetChangeEnv.h ComPlan.h PublicFun.h PathAndShow.h localplanning.o publicfun.o pretreatment.o
-advancedplan.o : GetChangeEnv.h ComPlan.h PublicFun.h localplanning.o heaparray.o publicfun.o
-localplanning.o : GetChangeEnv.h ComPlan.h HeapQueue.h heaparray.o publicfun.o pretreatment.o
-pretreatment.o : GetChangeEnv.h PublicFun.h publicfun.o
-heaparray.o : HeapQueue.h PublicFun.h publicfun.o
-publicfun.o : PublicFun.h
-test_heaparray.o : heaparray.o HeapQueue.h PublicFun.h
+test_fifoqueue : test_fifoqueue.o libmission.a
+	$(CC) -o $@ $(CFLAGS) test_publicfun.o $(LINKFLAGS)
+
+mission.o : pretreatment.h localplanning.h advancedplan.h publicfun.h mission.h localplanning.o publicfun.o pretreatment.o
+advancedplan.o : pretreatment.h localplanning.h fifoqueue.h advancedplan.h publicfun.h localplanning.o heapqueue.o publicfun.o fifoqueue.o
+localplanning.o : pretreatment.h localplanning.h advancedplan.h heapqueue.h heapqueue.o publicfun.o pretreatment.o
+pretreatment.o : pretreatment.h publicfun.h publicfun.o
+fifoqueue.o : fifoqueue.h publicfun.h publicfun.o
+heapqueue.o : heapqueue.h publicfun.h publicfun.o
+publicfun.o : publicfun.h
+test_heapqueue.o : heapqueue.o heapqueue.h publicfun.h
 
 .PHONY : clean
 clean :

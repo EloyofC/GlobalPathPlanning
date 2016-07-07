@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "GetChangeEnv.h"
-#include "PathAndShow.h"
-#include "PublicFun.h"
+#include "pretreatment.h"
+#include "mission.h"
+#include "publicfun.h"
 
 #define c_neighbourNum 4
 
@@ -66,8 +66,8 @@ static int GetAdaptPointX(t_AdaptPointPtr point);
 static void BoundaryFillFourInEnv(int xStart, int yStart, t_EnvironmentPtr environment);
 static void BoundaryFillInEnv(int xStart, int yStart, int neighbourNum, t_EnvironmentPtr environment);
 static void SetEnvMemberEdgeIfPossible(int x, int y, t_EnvironmentPtr environment);
-static void DrawVerticalInEnv(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr environment);
-static void DrawHorizonInEnv(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr environment);
+static void DrawVerticalInEnv(int x, int yStart, int yEnd, t_EnvironmentPtr environment);
+static void DrawHorizonInEnv(int xStart, int xEnd, int y, t_EnvironmentPtr environment);
 static void DrawFUBUInEnv(int xStart, int yStart, int xEnd, int yEnd, int forwardBack, double gapRatio, t_EnvironmentPtr environment);
 static void DrawBackUpInEnv(int xStart, int yStart, int xEnd, int yEnd, double gapRatio, t_EnvironmentPtr environment);
 static void DrawForwardUpInEnv(int xStart, int yStart, int xEnd, int yEnd, double gapRatio, t_EnvironmentPtr environment);
@@ -85,7 +85,7 @@ static void SetSingleObstacleInEnvironment(t_SingleObstaclePtr singleObstacle, t
 static t_EnvironmentPtr InitialEnvWithCell(int length, int width, int lengthOfUnit, int widthOfUnit, int xTopLeft, int yTopLeft, int xBottomRight, int yBottomRight);
 static t_EnvironmentPtr CreateEnvironment(int length, int width);
 static void InitialEnvironment(int length, int width, int xTopLeft, int yTopLeft, int xBottomRight, int yBottomRight, int lengthOfUnit, int widthOfUnit,  t_EnvironmentPtr environment);
-static int CalRectangleIndex(int xIndex, int yIndex, int length, int width);
+static int CalRectangleIndex(int xIndex, int yIndex, int length);
 static void ResetEnvironmentMember(int xIndex, int yIndex, t_EnvironmentPtr environment);
 static void PrintEnvironmentMember(int xIndex, int yIndex, t_EnvironmentPtr environment);
 static void InitialEnvironmentMember(int xIndex, int yIndex, t_EnvironmentPtr environment);
@@ -116,8 +116,8 @@ InitialEnvWithGps(int lengthOfUnit, int widthOfUnit, int lonTopLeft, int latTopL
   assert(lonTopLeft <= lonBottomRight); /* confirm the relation */
   assert(latTopLeft >= latBottomRight); /* need to confirm the number range */
 
-  length = CalGpsDistanceLon(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
-  width = CalGpsDistanceLat(lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
+  length = CalGpsDistanceLon(lonTopLeft, latTopLeft, lonBottomRight);
+  width = CalGpsDistanceLat(lonTopLeft, latTopLeft, latBottomRight);
 
   DebugCode (
 	     printf("InitialEnvWithGps : length %d width %d\n", length, width);
@@ -303,9 +303,9 @@ DrawLineWithTwoPointsInEnv(t_AdaptPointPtr pointFirst, t_AdaptPointPtr pointSeco
   assert(GetEnvLength(environment) >= xPointSecond && xPointSecond >= 0);
   assert(GetEnvWidth(environment) >= yPointSecond && yPointSecond >= 0);
   if (xPointFirst == xPointSecond) {
-    DrawVerticalInEnv(xPointFirst, yPointFirst, xPointSecond, yPointSecond, environment);
+    DrawVerticalInEnv(xPointFirst, yPointFirst, yPointSecond, environment);
   } else if (yPointFirst == yPointSecond) {
-    DrawHorizonInEnv(xPointFirst, yPointFirst, xPointSecond, yPointSecond, environment);
+    DrawHorizonInEnv(xPointFirst, xPointSecond, yPointSecond, environment);
   } else {
     DrawDiagonalInEnv(xPointFirst, yPointFirst, xPointSecond, yPointSecond, environment);
   }
@@ -381,7 +381,7 @@ DrawFUBUInEnv(int xStart, int yStart, int xEnd, int yEnd, int forwardBack, doubl
 }
 
 static void
-DrawHorizonInEnv(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr environment)
+DrawHorizonInEnv(int xStart, int xEnd, int y,  t_EnvironmentPtr environment)
 {
   int xIndex;
 
@@ -389,15 +389,15 @@ DrawHorizonInEnv(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr en
     SwapNum(&xStart, &xEnd);
   }
   DebugCodeDetail(
-		  printf("DrawHorizonInEnv : xStart %d xEnd %d y %d\n", xStart, xEnd, yStart);
+		  printf("DrawHorizonInEnv : xStart %d xEnd %d y %d\n", xStart, xEnd, y);
 		  );
   for (xIndex = xStart; xIndex <= xEnd; xIndex++) { /* this should include the end point */
-    SetEnvMemberEdgeIfPossible(xIndex, yStart, environment);
+    SetEnvMemberEdgeIfPossible(xIndex, y, environment);
   }
 }
 
 static void
-DrawVerticalInEnv(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr environment)
+DrawVerticalInEnv(int x, int yEnd, int yStart, t_EnvironmentPtr environment)
 {
   int yIndex;
 
@@ -405,10 +405,10 @@ DrawVerticalInEnv(int xStart, int yStart, int xEnd, int yEnd, t_EnvironmentPtr e
     SwapNum(&yStart, &yEnd);
   }
   DebugCodeDetail(
-		  printf("DrawVerticalInEnv : x %d yStart %d yEnd %d\n", xStart, yStart, yEnd);
+		  printf("DrawVerticalInEnv : x %d yStart %d yEnd %d\n", x, yStart, yEnd);
 		  );
   for (yIndex = yStart; yIndex <= yEnd; yIndex++) { /* this should include the end point */
-    SetEnvMemberEdgeIfPossible(xStart, yIndex, environment);
+    SetEnvMemberEdgeIfPossible(x, yIndex, environment);
   }
 }
 
@@ -629,7 +629,7 @@ ResetEnvironment(t_EnvironmentPtr environment)
 }
 
 static int
-CalRectangleIndex(int x, int y, int length, int width)
+CalRectangleIndex(int x, int y, int length)
 {
   return x + y * length;
 }
@@ -640,7 +640,7 @@ GetEnvMember(int xIndex, int yIndex, t_EnvironmentPtr environment)
   t_EnvironmentMemberPtr member;
   /* may need to add something to confirm the validation of environment and the index */
   assert(environment != NULL);
-  member = environment->m_envMembersPtr + CalRectangleIndex(xIndex, yIndex, environment->m_envLength, environment->m_envWidth);
+  member = environment->m_envMembersPtr + CalRectangleIndex(xIndex, yIndex, environment->m_envLength);
   assert(environment != NULL);
   return member;
 }
@@ -979,7 +979,7 @@ CalGpsPointXInEnv(t_PointCorPtr obstaclePoint, t_EnvironmentPtr environment)
   latPoint = GetPointCorLat(obstaclePoint);
   topLeftX = GetEnvTopLeftX(environment);
   topLeftY =  GetEnvTopLeftY(environment);
-  disLon = CalGpsDistanceLon(lonPoint, latPoint, topLeftX, topLeftY);
+  disLon = CalGpsDistanceLon(lonPoint, latPoint, topLeftX);
   if (lonPoint < topLeftX) {
     disLon = -1 *disLon;
   }
@@ -997,7 +997,7 @@ CalGpsPointYInEnv(t_PointCorPtr obstaclePoint, t_EnvironmentPtr environment)
   latPoint = GetPointCorLat(obstaclePoint);
   topLeftX = GetEnvTopLeftX(environment);
   topLeftY =  GetEnvTopLeftY(environment);
-  disLat = CalGpsDistanceLat(lonPoint, latPoint, topLeftX, topLeftY);
+  disLat = CalGpsDistanceLat(lonPoint, latPoint, topLeftY);
   if (latPoint > topLeftY) {	/* if y is > 0 it should < the topleft */
     disLat = -1 *disLat;
   }

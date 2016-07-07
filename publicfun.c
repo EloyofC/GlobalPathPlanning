@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-#include "PublicFun.h"
+#include "publicfun.h"
 
 #define c_earthRadius 6371004.0
 #define c_pi 3.1415926
@@ -58,13 +58,13 @@ CalGpsDistance(int lonFirst, int latFirst, int lonSecond, int latSecond)
 
 
 int
-CalGpsDistanceLon(int lonFirst, int latFirst, int lonSecond, int latSecond)
+CalGpsDistanceLon(int lonFirst, int latFirst, int lonSecond)
 {
   return CalGpsDistance(lonFirst, latFirst, lonSecond, latFirst);
 }
 
 int
-CalGpsDistanceLat(int lonFirst, int latFirst, int lonSecond, int latSecond)
+CalGpsDistanceLat(int lonFirst, int latFirst, int latSecond)
 {
   return CalGpsDistance(lonFirst, latFirst, lonFirst, latSecond);
 }
