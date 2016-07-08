@@ -1,14 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "miniunit.h"
+#include <check.h>
 #include "fifoqueue.h"
 #include "publicfun.h"
 #include "pretreatment.h"
 #include "fifoqueue.c"
 
-int tests_run = 0;
 
-static char* test_IsQueueFull()
+START_TEST(test_IsQueueFull)
 {
   t_FifoQueuePtr queue;
   t_EnvironmentMemberPtr memIn, memOut;
@@ -16,13 +15,13 @@ static char* test_IsQueueFull()
   queue = InitialFifoQueueWithSize(1);
   memIn = CreateEnvMemberWithCost(0);
   queue = EnFifoQueue(memIn, queue);
-  mu_assert("error, fifoqueue should be full", IsQueueFull(queue));
+  ck_assert(IsQueueFull(queue));
   memOut = DeFifoQueue(queue);
-  mu_assert("error, fifoqueue change the in member", memIn == memOut);
+  ck_assert_ptr_eq(memIn, memOut);
   FreeEnvMember(memIn);
   FreeFifoQueue(queue);
-  return 0;
 }
+END_TEST
 
 static char* test_FifoQueueTemplate(int *test, unsigned long length)
 {
@@ -31,27 +30,26 @@ static char* test_FifoQueueTemplate(int *test, unsigned long length)
   unsigned long i;
 
   queue = InitialFifoQueue();
-  mu_assert("error, the initial queue is not empty", IsQueueEmpty(queue));
+  ck_assert(IsQueueEmpty(queue));
   for (i = 0; i < length; i++) {
     mem[i] = CreateEnvMemberWithCost(test[i]);
   }
   for (i = 0; i < length; i++) {
     queue = EnFifoQueue(mem[i], queue);
   }
-  int memOut;
+  t_EnvironmentMemberPtr memOut;
   for (i = 0; i < length; i++) {
     memOut = DeFifoQueue(queue);
-    mu_assert("error, fifoqueue is not the same as before", memOut == mem[i]);
+    ck_assert_ptr_eq(memOut, mem[i]);
   }
-  mu_assert("error, the fifoqueue after deleting all is not empty", IsQueueEmpty(queue));
+  ck_assert(IsQueueEmpty(queue));
   for (i = 0; i < length; i++) {
     FreeEnvMember(mem[i]);
   }
   FreeFifoQueue(queue);
-  return 0;
 }
 
-static char* test_FifoQueue()
+START_TEST(test_FifoQueue)
 {
   int test1[8] = {1, 2, 3, 4, 5, 6, 7, 8};
   test_FifoQueueTemplate(test1, sizeof(test1)/sizeof(int));
@@ -64,25 +62,37 @@ static char* test_FifoQueue()
 
   int test4[8] = {-4, -9, -4, 0, 99, 3, 8, -192};
   test_FifoQueueTemplate(test4, sizeof(test4)/sizeof(int));
-  return 0;
 }
+END_TEST
 
-static char* all_tests()
+Suite *fifoqueue_suite(void)
 {
-  mu_run_test(test_IsQueueFull);
-  mu_run_test(test_FifoQueue);
-  return 0;
+  Suite *s;
+  TCase *tc_core;
+
+  s = suite_create("fifoqueue");
+
+  tc_core = tcase_create("Core");
+
+  tcase_add_test(tc_core, test_FifoQueue);
+  tcase_add_test(tc_core, test_IsQueueFull);
+  suite_add_tcase(s, tc_core);
+
+  return s;
 }
 
-int main(int argc, char **argv) {
-  char *result = all_tests();
-  if (result != 0) {
-    printf("%s\n", result);
-  }
-  else {
-    printf("ALL TESTS PASSED\n");
-  }
-  printf("Tests run: %d\n", tests_run);
 
-  return result != 0;
+int main(int argc, char **argv)
+{
+  int number_failed;
+  Suite *s;
+  SRunner *sr;
+
+  s = fifoqueue_suite();
+  sr = srunner_create(s);
+
+  srunner_run_all(sr, CK_NORMAL);
+  number_failed = srunner_ntests_failed(sr);
+  srunner_free(sr);
+  return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

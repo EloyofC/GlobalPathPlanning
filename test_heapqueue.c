@@ -1,13 +1,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "miniunit.h"
+#include <check.h>
 #include "heapqueue.h"
 #include "publicfun.h"
 #include "pretreatment.h"
 #include "heapqueue.c"
 
-int tests_run = 0;
 
 static int MemberCompare(t_EnvironmentMemberPtr member1, t_EnvironmentMemberPtr member2)
 {
@@ -26,11 +25,10 @@ static int NormalCompare(const void *a, const void *b)
 static char* test_GetFatherTemplate(int child, int father)
 {
   int calFather = GetFather(child);
-  mu_assert("error, GetFather is not correct", calFather == father);
-  return 0;
+  ck_assert_int_eq(calFather, father);
 }
 
-static char* test_GetFather(void)
+START_TEST(test_GetFather)
 {
   int father1 = 0;
   int leftChild1 = 1, rightChild1 = 2;
@@ -41,17 +39,16 @@ static char* test_GetFather(void)
   int leftChild2 = 7, rightChild2 = 8;
   test_GetFatherTemplate(leftChild2, father2);
   test_GetFatherTemplate(rightChild2, father2);
-  return 0;
 }
+END_TEST
 
 static char* test_GetLeftChildTemplate(int child, int father)
 {
   int calLeftChild = GetLeftChild(father);
-  mu_assert("error, GetLeftchild is not correct", calLeftChild == child);
-  return 0;
+  ck_assert_int_eq(calLeftChild, child);
 }
 
-static char* test_GetLeftChild(void)
+START_TEST(test_GetLeftChild)
 {
   int father1 = 0;
   int leftChild1 = 1;
@@ -61,10 +58,10 @@ static char* test_GetLeftChild(void)
   int leftChild2 = 7;
   test_GetLeftChildTemplate(leftChild2, father2);
 
-  return 0;
 }
+END_TEST
 
-static char* test_IsQueueFull(void)
+START_TEST(test_IsQueueFull)
 {
   t_PriorityQueuePtr queue;
   t_EnvironmentMemberPtr memIn, memOut;
@@ -72,13 +69,13 @@ static char* test_IsQueueFull(void)
   queue = InitializeWithSize(1);
   memIn = CreateEnvMemberWithCost(0);
   queue = InsertPriorityQueue(MemberCompare, memIn, queue);
-  mu_assert("error, priorityqueue should be full", IsQueueFull(queue));
+  ck_assert(IsQueueFull(queue));
   memOut = DeleteMinPriorityQueue(MemberCompare, queue);
-  mu_assert("error, priorityqueue change the in member", memIn == memOut);
+  ck_assert_ptr_eq(memIn, memOut);
   FreeEnvMember(memIn);
   DestroyPriorityQueue(queue);
-  return 0;
 }
+END_TEST
 
 /* test case template for initial to be empty, the order out of the queue is right, and the end queue is empty is true */
 static char* test_PriorityQueueTemplate(int *test, unsigned long length, int *sorted)
@@ -90,7 +87,7 @@ static char* test_PriorityQueueTemplate(int *test, unsigned long length, int *so
   memcpy(sorted, test, length * sizeof(int));
   qsort(sorted, length, sizeof(int), NormalCompare);
   queue = InitializePriorityQueue();
-  mu_assert("error, the initial queue is not empty",IsQueueEmpty(queue));
+  ck_assert(IsQueueEmpty(queue));
   for (i=0; i < length; i++) {
     mem[i] = CreateEnvMemberWithCost(test[i]);
   }
@@ -100,17 +97,16 @@ static char* test_PriorityQueueTemplate(int *test, unsigned long length, int *so
   int cost;
   for (i = 0; i < length; i++) {
     cost = GetEnvMemberCost(DeleteMinPriorityQueue(MemberCompare, queue));
-    mu_assert("error, deleteminpriorityqueue is not the min", sorted[i] == cost);
+    ck_assert_int_eq(sorted[i], cost);
   }
-  mu_assert("error, priority queue after deleting all is not empty", IsQueueEmpty(queue));
+  ck_assert(IsQueueEmpty(queue));
   for (i = 0; i < length; i++) {
     FreeEnvMember(mem[i]);
   }
   DestroyPriorityQueue(queue);
-  return 0;
 }
 
-static char* test_PriorityQueue(void)
+START_TEST(test_PriorityQueue)
 {
   int test1[8] = {1, 3, 5, 7, 9, 35, 78, 89};
   int sorted1[8];
@@ -131,27 +127,38 @@ static char* test_PriorityQueue(void)
   int test5[8] = {-1, -89,  0, -78, -35, -12, -9, -5};
   int sorted5[8];
   test_PriorityQueueTemplate(test5, sizeof(test5)/sizeof(int), sorted5);
-  return 0;
 }
+END_TEST
 
-static char* all_tests(void)
+Suite *heapqueue_suite(void)
 {
-  mu_run_test(test_PriorityQueue);
-  mu_run_test(test_GetFather);
-  mu_run_test(test_GetLeftChild);
-  mu_run_test(test_IsQueueFull);
-  return 0;
+  Suite *s;
+  TCase *tc_core;
+
+  s = suite_create("heapqueue");
+  tc_core = tcase_create("Core");
+
+  tcase_add_test(tc_core, test_PriorityQueue);
+  tcase_add_test(tc_core, test_GetFather);
+  tcase_add_test(tc_core, test_GetLeftChild);
+  tcase_add_test(tc_core, test_IsQueueFull);
+  suite_add_tcase(s, tc_core);
+
+  return s;
 }
 
-int main(int argc, char **argv) {
-  char *result = all_tests();
-  if (result != 0) {
-    printf("%s\n", result);
-  }
-  else {
-    printf("ALL TESTS PASSED\n");
-  }
-  printf("Tests run: %d\n", tests_run);
+int main(int argc, char *argv[])
+{
+  int number_failed;
+  Suite *s;
+  SRunner *sr;
 
-  return result != 0;
+  s = heapqueue_suite();
+  sr = srunner_create(s);
+
+  srunner_run_all(sr, CK_NORMAL);
+  number_failed = srunner_ntests_failed(sr);
+  srunner_free(sr);
+  return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+  return 0;
 }
