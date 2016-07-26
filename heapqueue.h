@@ -11,10 +11,10 @@ struct t_HeapStruct;
 typedef struct t_HeapStruct *t_PriorityQueuePtr;
 struct t_EnvMember;
 typedef struct t_EnvMember *t_EnvironmentMemberPtr;
-typedef t_EnvironmentMemberPtr t_ElementTypePtr; /* store the ptr to the environment inside the queue */
+typedef t_EnvironmentMemberPtr t_PQElementTypePtr; /* store the ptr to the environment inside the queue */
 
-t_PriorityQueuePtr InitializePriorityQueue(void);
-void DestroyPriorityQueue(t_PriorityQueuePtr queue);
-t_PriorityQueuePtr InsertPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_ElementTypePtr X, t_PriorityQueuePtr queue);
-t_ElementTypePtr DeleteMinPriorityQueue(int (* cmp)(t_ElementTypePtr, t_ElementTypePtr), t_PriorityQueuePtr queue);
+t_PriorityQueuePtr CreatePriorityQueue( void );
+void FreePriorityQueue( t_PriorityQueuePtr queue );
+t_PriorityQueuePtr InsertPriorityQueue( int ( * cmp )( t_PQElementTypePtr, t_PQElementTypePtr ), t_PQElementTypePtr X, t_PriorityQueuePtr queue );
+t_PQElementTypePtr DeleteMinPriorityQueue( int ( * cmp )( t_PQElementTypePtr, t_PQElementTypePtr ), t_PriorityQueuePtr queue );
 #endif

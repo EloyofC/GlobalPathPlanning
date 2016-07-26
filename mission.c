@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "pretreatment.h"
+#include "envoperate.h"
 #include "mission.h"
 #include "publicfun.h"
 #include "advancedplan.h"
@@ -9,114 +10,106 @@
 #define c_widthOfUnit 100
 
 
-static int GetFinalPointLon(t_PathPointPtr pathPoint);
-static int GetFinalPointLat(t_PathPointPtr pathPoint);
-static t_PathPointPtr GetFinalPointNext(t_PathPointPtr pathPoint);
-static t_PathPointPtr GetFinalLinePoints(t_PathLinesPtr finalPathLines);
-static int GetFinalLinePointCount(t_PathLinesPtr finalPathlines);
+t_PathLinesPtr DoCruiseGeneral(
+   int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles
+   ) {
+   int cellStartX = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonStart ) / c_lengthOfUnit;
+   int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_widthOfUnit;
+   int cellEndX =  CalGpsDistanceLon( lonTopLeft, latTopLeft, lonEnd ) / c_lengthOfUnit;
+   int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_widthOfUnit;
+   int cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
+   /* ensure that the cellWidth is larger than 1 */
+   t_EnvironmentPtr newEnvironment = InitialEnvWithGps( c_lengthOfUnit, c_widthOfUnit,
+                                                        lonTopLeft, latTopLeft,
+                                                        lonBottomRight, latBottomRight );
+   SetObstaclesInEnvironment( obstacles, newEnvironment );
 
-
-t_PathLinesPtr
-DoCruiseGeneral(int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles)
-{
-  int cellStartX, cellStartY, cellEndX, cellEndY, cellWidth; /* cellWidth is width convert to suite th cell */
-  int endPointX, endPointY;
-  int IsSearchSuccess;
-  t_EnvironmentPtr newEnvironment;
-  t_PathLinesPtr pathLines;
-
-  cellStartX = CalGpsDistanceLon(lonTopLeft, latTopLeft, lonStart) / c_lengthOfUnit;
-  cellStartY = CalGpsDistanceLat(lonTopLeft, latTopLeft, latStart) / c_widthOfUnit;
-  cellEndX =  CalGpsDistanceLon(lonTopLeft, latTopLeft, lonEnd) / c_lengthOfUnit;
-  cellEndY =  CalGpsDistanceLat(lonTopLeft, latTopLeft, latEnd) / c_widthOfUnit;
-  cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
-  newEnvironment = InitialEnvWithGps(c_lengthOfUnit, c_widthOfUnit, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight);
-  SetObstaclesInEnvironment(obstacles, newEnvironment);
-
-  endPointX = cellEndX - 1;	/* x need to be smaller, cos of end cal of multi and div */
-  endPointY = cellEndY - 1;
-  IsSearchSuccess = ScanSearch(cellStartX, cellStartY, endPointX, endPointY, cellWidth, newEnvironment);
-  DebugCode(
- 	    PrintEnvPathLine();
- 	    );
-  if (IsSearchSuccess) {
-  pathLines = GetGpsPathLines(newEnvironment);
-  DeleteEnvironment(newEnvironment);
-  return pathLines;
-  } else {
-    DeleteEnvironment(newEnvironment);
-    return NULL;
-  }
+   int endPointX = cellEndX - 1;
+   int endPointY = cellEndY - 1;
+   int IsSearchSuccess = ScanSearch( cellStartX, cellStartY,
+                                     endPointX, endPointY,
+                                     cellWidth, newEnvironment );
+   DebugCode(
+      PrintEnvPathLine();
+      );
+   if ( IsSearchSuccess ) {
+      t_PathLinesPtr pathLines = GetGpsPathLines( newEnvironment );
+      DeleteEnvironment( newEnvironment );
+      return pathLines;
+   } else {
+      DeleteEnvironment( newEnvironment );
+      return NULL;
+   }
 }
 
 
-static void
-FreeFinalPathPoints(t_PathPointPtr pathPointHead)
-{
-  t_PathPointPtr pathPointTemp;
+static void FreeFinalPathPoints(
+   t_PathPointPtr pathPointHead
+   ) {
+   t_PathPointPtr pathPointTemp;
 
-  for (; pathPointHead != NULL; pathPointHead = pathPointTemp) {
-    pathPointTemp = pathPointHead->m_next;
-    free(pathPointHead);
-  }
+   for ( ; pathPointHead != NULL; pathPointHead = pathPointTemp ) {
+      pathPointTemp = pathPointHead->m_next;
+      free( pathPointHead );
+   }
 }
 
-void
-FreeFinalPathLines(t_PathLinesPtr finalPathLines)
-{
-  FreeFinalPathPoints(GetFinalLinePoints(finalPathLines));
-  free(finalPathLines);
+static t_PathPointPtr GetFinalLinePoints(
+   t_PathLinesPtr finalPathLines
+   ) {
+   return finalPathLines->m_pathPoints;
 }
 
-static int
-GetFinalLinePointCount(t_PathLinesPtr finalPathLines)
-{
-  return finalPathLines->m_pointCounts;
+void FreeFinalPathLines(
+   t_PathLinesPtr finalPathLines
+   ) {
+   FreeFinalPathPoints( GetFinalLinePoints( finalPathLines ) );
+   free( finalPathLines );
 }
 
-static t_PathPointPtr
-GetFinalLinePoints(t_PathLinesPtr finalPathLines)
-{
-  return finalPathLines->m_pathPoints;
+static int GetFinalLinePointCount(
+   t_PathLinesPtr finalPathLines
+   ) {
+   return finalPathLines->m_pointCounts;
 }
 
-static int
-GetFinalPointLon(t_PathPointPtr pathPoint)
-{
-  return pathPoint->m_lon;
+static int GetFinalPathPointLon(
+   t_PathPointPtr pathPoint
+   ) {
+   return pathPoint->m_lon;
 }
 
-static int
-GetFinalPointLat(t_PathPointPtr pathPoint)
-{
-  return pathPoint->m_lat;
+static int GetFinalPathPointLat(
+   t_PathPointPtr pathPoint
+   ) {
+   return pathPoint->m_lat;
 }
 
-static t_PathPointPtr
-GetFinalPointNext(t_PathPointPtr pathPoint)
-{
-  return pathPoint->m_next;
+static t_PathPointPtr GetFinalPathPointNext(
+   t_PathPointPtr pathPoint
+   ) {
+   return pathPoint->m_next;
 }
 
-void
-PrintFinalPathLines(t_PathLinesPtr finalPathLines, char *str)
-{
-  int i, count;
-  t_PathPointPtr pathPoints;
-
-  if (finalPathLines != NULL) {
-    count = GetFinalLinePointCount(finalPathLines);
-    pathPoints = GetFinalLinePoints(finalPathLines);
-    for (i = 0; i < count; i++) {
-      printf("%s : the %d nd point x %d y %d\n", str, i, GetFinalPointLon(pathPoints), GetFinalPointLat(pathPoints));
-      pathPoints = GetFinalPointNext(pathPoints);
-    }
-  }
+void PrintFinalPathLines(
+   t_PathLinesPtr finalPathLines, char *str
+   ) {
+   if ( finalPathLines != NULL ) {
+      int count = GetFinalLinePointCount( finalPathLines );
+      t_PathPointPtr pathPoints = GetFinalLinePoints( finalPathLines );
+      
+      for ( int i = 0; i < count; i++ ) {
+         printf( "%s : the %d nd point x %d y %d\n", str, i, GetFinalPathPointLon( pathPoints ), GetFinalPathPointLat( pathPoints ) );
+         pathPoints = GetFinalPathPointNext( pathPoints );
+      }
+   } else {
+      return;
+   }
 }
 
-void
-PrintGpsPathLines(t_PathLinesPtr finalPathLines)
-{
-  PrintFinalPathLines(finalPathLines, "The gps path line");
+void PrintGpsPathLines(
+   t_PathLinesPtr finalPathLines
+   ) {
+   PrintFinalPathLines( finalPathLines, "The gps path line" );
 }
 

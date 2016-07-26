@@ -11,10 +11,11 @@ struct t_FifoQueue;
 typedef struct t_FifoQueue *t_FifoQueuePtr;
 struct t_EnvMember;
 typedef struct t_EnvMember *t_EnvironmentMemberPtr;
+typedef t_EnvironmentMemberPtr t_FifoElementTypePtr;
 
-t_FifoQueuePtr EnFifoQueue(t_EnvironmentMemberPtr memberNew, t_FifoQueuePtr queue);
-t_EnvironmentMemberPtr DeFifoQueue(t_FifoQueuePtr queue);
-void FreeFifoQueue(t_FifoQueuePtr queue);
-t_FifoQueuePtr InitialFifoQueue(void);
+t_FifoQueuePtr EnFifoQueue( t_FifoElementTypePtr memberNew, t_FifoQueuePtr queue );
+t_FifoElementTypePtr DeFifoQueue( t_FifoQueuePtr queue );
+void FreeFifoQueue( t_FifoQueuePtr queue );
+t_FifoQueuePtr CreateFifoQueue( void );
 
 #endif
