@@ -41,16 +41,16 @@ void SetEnvMemberPriority( int priority, t_EnvironmentMemberPtr member );
 void SetEnvMemberDead( t_EnvironmentMemberPtr member );
 void SetEnvMemberAlive( t_EnvironmentMemberPtr member );
 void SetEnvMemberPrev( t_EnvironmentMemberPtr memberPrev, t_EnvironmentMemberPtr member );
-void SetEnvMemberFlag( t_EnvironmentMemberPtr member );     /* set to envmem 1 */
+void SetEnvMemberSearched( t_EnvironmentMemberPtr member );     /* set to envmem 1 */
 void SetEnvMemberObstacle( t_EnvironmentMemberPtr member );
 int IsEnvPointInEnv( int xIndex, int yIndex, t_EnvironmentPtr environment );
 int IsEnvMemberUnvisited( t_EnvironmentMemberPtr member );
 int IsEnvMemberAlive( t_EnvironmentMemberPtr member );
 int IsEnvMemberDead( t_EnvironmentMemberPtr member );
-int IsEnvMemberFlagNotSet( t_EnvironmentMemberPtr member ); /* to check whether the flag of this environmentmember is not set */
+int IsEnvMemberNotSearched( t_EnvironmentMemberPtr member ); /* to check whether the flag of this environmentmember is not set */
 int IsEnvMemberObstacle( t_EnvironmentMemberPtr member ); /* To see if the currentenvmember is obstacle */
 
-void ResetEnvAllFlag( t_EnvironmentPtr environment ); /* flag is for potantial use, if u need to use it, this function set all the flag in environment to 1 */
+void ResetEnvAllNotSearched( t_EnvironmentPtr environment ); /* flag is for potantial use, if u need to use it, this function set all the flag in environment to 1 */
 void ResetEnvironment( t_EnvironmentPtr environment ); /* Reset all the members of the environment to initial value for another use */
 int IsSearchEnd( t_EnvironmentMemberPtr member, t_EnvironmentPtr environment );
 

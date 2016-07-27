@@ -15,7 +15,7 @@ struct t_EnvMember
    int m_yIndex;
    int m_cost;
    int m_priority;
-   int m_flag;/* a m_flag for some function who need it  */
+   int m_searched;
    enum e_Obstacle m_obstacle;
    enum e_States m_state;
    t_EnvironmentMemberPtr m_prevPtr;
@@ -75,7 +75,7 @@ static void InitialEnvironmentMember(
    member->m_prevPtr = NULL;
    member->m_cost = 0;
    member->m_priority = 0;
-   member->m_flag = 0;
+   member->m_searched = 0;
    member->m_state = States_unvisited;
    member->m_obstacle = Obstacle_free;
 }
@@ -160,7 +160,7 @@ static void ResetEnvironmentMember(
    member->m_prevPtr = NULL;
    member->m_cost = 0;
    member->m_priority = 0;
-   member->m_flag = 0;
+   member->m_searched = 0;
    member->m_state = States_unvisited;
 }
 
@@ -271,26 +271,26 @@ int GetEnvEndY(
    return environment->m_yEnd;
 }
 
-int IsEnvMemberFlagNotSet(
+int IsEnvMemberNotSearched(
    t_EnvironmentMemberPtr member
    ) {
-   return member->m_flag == 0;
+   return member->m_searched == 0;
 }
 
-void ResetEnvAllFlag(
+void ResetEnvAllNotSearched(
    t_EnvironmentPtr environment
    ) {
    for ( int i = 0; i < environment->m_envLength; i++ )
       for ( int j = 0; j < environment->m_envWidth; j++ ) {
           t_EnvironmentMemberPtr member = GetEnvMember( i, j, environment );
-         member->m_flag = 0;
+         member->m_searched = 0;
       }
 }
 
-void SetEnvMemberFlag(
+void SetEnvMemberSearched(
    t_EnvironmentMemberPtr member
    ) {
-   member->m_flag = 1;
+   member->m_searched = 1;
 }
 
 int GetEnvMemberX(

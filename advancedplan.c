@@ -324,22 +324,25 @@ static int GetDistributedFreePoints(
    return 1;
 }
 
-static void SearchOneNode(
+static t_FifoQueuePtr SearchOneNode(
    int xIndex,
    int yIndex,
+   t_FifoQueuePtr nearQueue,
    t_EnvironmentPtr environment
    ) {
    if ( IsEnvPointInEnv( xIndex, yIndex, environment ) ) {
       t_EnvironmentMemberPtr member = GetEnvMember( xIndex, yIndex, environment );
-      if ( IsEnvMemberFlagNotSet( member ) ) {
-         SetEnvMemberFlag( member );
-         sg_nearQueue = EnFifoQueue( member, sg_nearQueue );
+      if ( IsEnvMemberNotSearched( member ) ) {
+         SetEnvMemberSearched( member );
+         nearQueue = EnFifoQueue( member, nearQueue );
       }
    }
+   return nearQueue;
 }
 
-static void SearchFourNeighbour(
+static t_FifoQueuePtr SearchFourNeighbour(
    t_EnvironmentMemberPtr member,
+   t_FifoQueuePtr nearQueue,
    t_EnvironmentPtr environment
    ) {
    int x[ 4 ] = { -1, 1, 0, 0 };	/* search in four directions */
@@ -348,7 +351,7 @@ static void SearchFourNeighbour(
    int yIndex = GetEnvMemberY( member );
 
    for (   unsigned long i=0; i < sizeof( x )/sizeof( int ); i++ )
-      SearchOneNode( xIndex + x[ i ], yIndex + y[ i ], environment );
+      nearQueue = SearchOneNode( xIndex + x[ i ], yIndex + y[ i ], nearQueue, environment );
 }
 
 t_EnvironmentMemberPtr SearchNearestFreePoint(
@@ -359,14 +362,14 @@ t_EnvironmentMemberPtr SearchNearestFreePoint(
    if ( environment == NULL )
       return NULL;
 
-   ResetEnvAllFlag( environment );
-   sg_nearQueue =  CreateFifoQueue();
+   ResetEnvAllNotSearched( environment );
+   t_FifoQueuePtr nearQueue =  CreateFifoQueue();
    t_EnvironmentMemberPtr member = GetEnvMember( xIndex, yIndex, environment );
   
-   for ( ; IsEnvMemberObstacle( member ); member = DeFifoQueue( sg_nearQueue ) ) {
-      SearchFourNeighbour( member, environment );
+   for ( ; IsEnvMemberObstacle( member ); member = DeFifoQueue( nearQueue ) ) {
+      nearQueue = SearchFourNeighbour( member, nearQueue, environment );
    }
-   FreeFifoQueue( sg_nearQueue );
+   FreeFifoQueue( nearQueue );
    return member;
 }
 
