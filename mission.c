@@ -10,8 +10,17 @@
 #define c_widthOfUnit 100
 
 
-t_PathLinesPtr DoCruiseGeneral(
-   int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles
+t_PathLinesPtr GetScanLinesInRec(
+   int lonStart,
+   int latStart,
+   int lonEnd,
+   int latEnd,
+   int lonTopLeft,
+   int latTopLeft,
+   int lonBottomRight,
+   int latBottomRight,
+   int width,
+   t_ObstaclesPtr obstacles
    ) {
    int cellStartX = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonStart ) / c_lengthOfUnit;
    int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_widthOfUnit;
@@ -28,10 +37,12 @@ t_PathLinesPtr DoCruiseGeneral(
    int endPointY = cellEndY - 1;
    int IsSearchSuccess = ScanSearch( cellStartX, cellStartY,
                                      endPointX, endPointY,
-                                     cellWidth, newEnvironment );
+                                     cellWidth,
+                                     newEnvironment );
    DebugCode(
       PrintEnvPathLine();
       );
+
    if ( IsSearchSuccess ) {
       t_PathLinesPtr pathLines = GetGpsPathLines( newEnvironment );
       DeleteEnvironment( newEnvironment );
@@ -42,6 +53,8 @@ t_PathLinesPtr DoCruiseGeneral(
    }
 }
 
+t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
+t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
 
 static void FreeFinalPathPoints(
    t_PathPointPtr pathPointHead
@@ -92,12 +105,13 @@ static t_PathPointPtr GetFinalPathPointNext(
 }
 
 void PrintFinalPathLines(
-   t_PathLinesPtr finalPathLines, char *str
+   t_PathLinesPtr finalPathLines,
+   char *str
    ) {
    if ( finalPathLines != NULL ) {
       int count = GetFinalLinePointCount( finalPathLines );
       t_PathPointPtr pathPoints = GetFinalLinePoints( finalPathLines );
-      
+
       for ( int i = 0; i < count; i++ ) {
          printf( "%s : the %d nd point x %d y %d\n", str, i, GetFinalPathPointLon( pathPoints ), GetFinalPathPointLat( pathPoints ) );
          pathPoints = GetFinalPathPointNext( pathPoints );

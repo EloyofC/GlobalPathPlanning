@@ -8,33 +8,21 @@ else
 	CFLAGS = -O2 -DNDEBUG
 endif
 
-objects = advancedplan.o localplanning.o pretreatment.o envoperate.o heapqueue.o publicfun.o mission.o fifoqueue.o
-testsample = test.c
-unittests = test_heapqueue.o test_publicfun.o test_fifoqueue.o test_advancedplan.o test_pretreatment.o
-targets = test $(basename $(unittests))
+OBJECTS = advancedplan.o localplanning.o pretreatment.o envoperate.o heapqueue.o publicfun.o mission.o fifoqueue.o
+TESTSAMPLE = test.c
+UNITTESTTARGETS = $(basename $(wildcard test_*.c))
+TARGETS = test
 
 default : libmission.a test
-all : libmission.a $(targets)
-test : $(testsample) libmission.a
+all : libmission.a $(TARGETS) $(UNITTESTTARGETS)
+test : $(TESTSAMPLE) libmission.a
 	$(CC) -o $@ $(CFLAGS) test.c $(LINKFLAGS)
 
-libmission.a : $(objects)
+libmission.a : $(OBJECTS)
 	ar -rc $@ $^
 
-test_heapqueue : test_heapqueue.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_heapqueue.o $(LINKFLAGS) $(CHECK)
-
-test_publicfun : test_publicfun.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_publicfun.o $(LINKFLAGS) $(CHECK)
-
-test_fifoqueue : test_fifoqueue.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_fifoqueue.o $(LINKFLAGS) $(CHECK)
-
-test_advancedplan : test_advancedplan.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_advancedplan.o $(LINKFLAGS) $(CHECK)
-
-test_pretreatment : test_pretreatment.o libmission.a
-	$(CC) -o $@ $(CFLAGS) test_pretreatment.o $(LINKFLAGS) $(CHECK)
+$(UNITTESTTARGETS) : % : %.c libmission.a
+	$(CC) -o $@ $(CFLAGS) $< $(LINKFLAGS) $(CHECK)
 
 mission.o : pretreatment.h localplanning.h advancedplan.h publicfun.h mission.h
 advancedplan.o : pretreatment.h localplanning.h fifoqueue.h advancedplan.h publicfun.h
@@ -44,18 +32,14 @@ envoperate.o : envoperate.h publicfun.h
 fifoqueue.o : fifoqueue.h publicfun.h
 heapqueue.o : heapqueue.h publicfun.h
 publicfun.o : publicfun.h
-test_heapqueue.o : heapqueue.h publicfun.h
-test_publicfun.o : publicfun.h
-test_fifoqueue.o : publicfun.h fifoqueue.h pretreatment.h
-test_advancedplan.o : publicfun.h pretreatment.h advancedplan.h
 
 .PHONY : clean
 clean :
-	rm $(objects) $(unittests) $(targets) libmission.a
+	rm $(OBJECTS) $(UNITTESTTARGETS) $(TARGETS) libmission.a
 
 .PHONY : cleanall
 cleanall :
-	rm test $(objects) libmission.a out1 out2 test.log
+	rm $(OBJECTS) $(UNITTESTTARGETS) $(TARGETS) libmission.a out1 out2 test.log
 
 .PHONY : run
 run :

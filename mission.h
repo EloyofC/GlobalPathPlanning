@@ -3,8 +3,8 @@
   Author : Green
   Date : 16/06/02
 */
-#ifndef _Path_And_Show_H
-#define _Path_And_Show_H
+#ifndef _Mission_Interferce_H
+#define _Mission_Interferce_H
 
 typedef struct t_Obstacles
 {
@@ -37,7 +37,16 @@ int m_lat;
 struct t_PathPoint *m_next;
 } *t_PathPointPtr;
 
-t_PathLinesPtr DoCruiseGeneral( int xStart, int yStart, int xEnd, int yEnd, int xTopLeft, int yTopLeft, int xBottomRight, int yBottomRight, int width, t_ObstaclesPtr obstacles );
+struct t_ExpectedCruiseCricle
+{
+int lonCircleCenter;            /* type of gps */
+int latCircleCenter;
+int circleRadius;
+};
+
+t_PathLinesPtr GetScanLinesInRec( int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles );
+t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
+t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
 void FreeFinalPathLines( t_PathLinesPtr finalPathLines );
 void PrintGpsPathLines( t_PathLinesPtr finalPathLines );
 void PrintFinalPathLines( t_PathLinesPtr finalPathLines, char *str );
