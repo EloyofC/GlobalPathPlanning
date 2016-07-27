@@ -9,6 +9,19 @@
 #define c_lengthOfUnit 100
 #define c_widthOfUnit 100
 
+static t_EnvironmentPtr InitialEnvWithObstacles(
+   int lonTopLeft,
+   int latTopLeft,
+   int lonBottomRight,
+   int latBottomRight,
+   t_ObstaclesPtr obstacles
+   ) {
+   t_EnvironmentPtr newEnvironment = InitialEnvWithGps( c_lengthOfUnit, c_widthOfUnit,
+                                                        lonTopLeft, latTopLeft,
+                                                        lonBottomRight, latBottomRight );
+   SetObstaclesInEnvironment( obstacles, newEnvironment );
+   return newEnvironment;
+}
 
 t_PathLinesPtr GetScanLinesInRec(
    int lonStart,
@@ -26,35 +39,45 @@ t_PathLinesPtr GetScanLinesInRec(
    int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_widthOfUnit;
    int cellEndX =  CalGpsDistanceLon( lonTopLeft, latTopLeft, lonEnd ) / c_lengthOfUnit;
    int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_widthOfUnit;
-   int cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
    /* ensure that the cellWidth is larger than 1 */
-   t_EnvironmentPtr newEnvironment = InitialEnvWithGps( c_lengthOfUnit, c_widthOfUnit,
-                                                        lonTopLeft, latTopLeft,
-                                                        lonBottomRight, latBottomRight );
-   SetObstaclesInEnvironment( obstacles, newEnvironment );
+   int cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
+   t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
+                                                              lonBottomRight, latBottomRight,
+                                                              obstacles );
 
    int endPointX = cellEndX - 1;
    int endPointY = cellEndY - 1;
-   int IsSearchSuccess = ScanSearch( cellStartX, cellStartY,
+   t_PathLinesPtr pathLines = ScanSearch( cellStartX, cellStartY,
                                      endPointX, endPointY,
                                      cellWidth,
                                      newEnvironment );
-   DebugCode(
-      PrintEnvPathLine();
-      );
-
-   if ( IsSearchSuccess ) {
-      t_PathLinesPtr pathLines = GetGpsPathLines( newEnvironment );
-      DeleteEnvironment( newEnvironment );
-      return pathLines;
-   } else {
-      DeleteEnvironment( newEnvironment );
-      return NULL;
-   }
+   DeleteEnvironment( newEnvironment );
+   return pathLines;
 }
 
-t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
-t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
+t_PathLinesPtr GetCruisePointsInCircle(
+   struct t_ExpectedCruiseCricle circle,
+   int lonTopLeft,
+   int latTopLeft,
+   int lonBottomRight,
+   int latBottomRight,
+   t_ObstaclesPtr obstacles
+   ){
+   
+}
+
+t_PathLinesPtr GetPointsWithFixedMultiPosition(
+   t_PathLinesPtr positions,
+   int lonTopLeft,
+   int latTopLeft,
+   int lonBottomRight,
+   int latBottomRight,
+   t_ObstaclesPtr obstacles
+   ){
+   t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
+                                                              lonBottomRight, latBottomRight,
+                                                              obstacles );
+}
 
 static void FreeFinalPathPoints(
    t_PathPointPtr pathPointHead
@@ -104,7 +127,7 @@ static t_PathPointPtr GetFinalPathPointNext(
    return pathPoint->m_next;
 }
 
-void PrintFinalPathLines(
+static void PrintFinalPathLines(
    t_PathLinesPtr finalPathLines,
    char *str
    ) {
@@ -119,6 +142,12 @@ void PrintFinalPathLines(
    } else {
       return;
    }
+}
+
+void PrintEnvPathLines(
+   t_PathLinesPtr finalPathLines
+   ) {
+   PrintFinalPathLines( finalPathLines, "The env pass point");
 }
 
 void PrintGpsPathLines(

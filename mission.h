@@ -49,6 +49,6 @@ t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle, int
 t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
 void FreeFinalPathLines( t_PathLinesPtr finalPathLines );
 void PrintGpsPathLines( t_PathLinesPtr finalPathLines );
-void PrintFinalPathLines( t_PathLinesPtr finalPathLines, char *str );
+void PrintEnvPathLines( t_PathLinesPtr finalPathLines );
 
 #endif

@@ -145,6 +145,20 @@ static int TestTemplate(
    return 0;
 }
 
+static int TestNoObstacle(
+   void
+   ) {
+   int lonTopLeft = 1200291593;
+   int latTopLeft = 356995731;
+   int lonBottomRight = 1201856045;
+   int latBottomRight = 356052480;
+   int width = 500;
+   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
+   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
+   t_ObstaclesPtr obstacles = NULL;
+   return TestTemplate( lonTopLeft, latTopLeft, lonBottomRight,
+                        latBottomRight, width, obstacles );
+}
 
 static t_ObstaclesPtr GetSingleObstacleInArea(
    int lonTopLeft,
@@ -168,6 +182,22 @@ static t_ObstaclesPtr GetSingleObstacleInArea(
    obstacles->m_obstacleMembersPtr = CreateSingleObstacleArray( 1 );
    InsertSingleObstacle( sizeof( obs1X )/sizeof( int ), obs1X, obs1Y,GetSingleObstacle( 0, obstacles ));
    return obstacles;
+}
+
+static int TestSingleObstacle(
+   void
+   ) {
+   int lonTopLeft = 1225604106;
+   int latTopLeft = 308890180;
+   int lonBottomRight =  1227319960;
+   int latBottomRight =  307873053;
+   int width = 500;
+   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
+   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
+   t_ObstaclesPtr obstacles = GetSingleObstacleInArea( lonTopLeft, latTopLeft,
+                                                       lonBottomRight, latBottomRight );
+   return TestTemplate( lonTopLeft, latTopLeft, lonBottomRight,
+                        latBottomRight, width, obstacles );
 }
 
 static t_ObstaclesPtr GetTwoObstaclesInArea(
@@ -203,37 +233,6 @@ static t_ObstaclesPtr GetTwoObstaclesInArea(
    return obstacles;
 }
 
-static int TestNoObstacle(
-   void
-   ) {
-   int lonTopLeft = 1200291593;
-   int latTopLeft = 356995731;
-   int lonBottomRight = 1201856045;
-   int latBottomRight = 356052480;
-   int width = 500;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
-   t_ObstaclesPtr obstacles = NULL;
-   return TestTemplate( lonTopLeft, latTopLeft, lonBottomRight,
-                        latBottomRight, width, obstacles );
-}
-
-static int TestSingleObstacle(
-   void
-   ) {
-   int lonTopLeft = 1225604106;
-   int latTopLeft = 308890180;
-   int lonBottomRight =  1227319960;
-   int latBottomRight =  307873053;
-   int width = 500;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
-   t_ObstaclesPtr obstacles = GetSingleObstacleInArea( lonTopLeft, latTopLeft,
-                                                       lonBottomRight, latBottomRight );
-   return TestTemplate( lonTopLeft, latTopLeft, lonBottomRight,
-                        latBottomRight, width, obstacles );
-}
-
 static int TestTwoObstacle(
    void
    ) {
@@ -245,6 +244,38 @@ static int TestTwoObstacle(
    printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
    printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
+                                                     lonBottomRight, latBottomRight );
+   return TestTemplate( lonTopLeft, latTopLeft, lonBottomRight,
+                        latBottomRight, width, obstacles );
+}
+
+static t_ObstaclesPtr GetFullObstacleInArea(
+   int lonTopLeft,
+   int latTopLeft,
+   int lonBottomRight,
+   int latBottomRight
+   ) {
+   int obs1X[] = {1223261133, 1228349743, 1228371716, 1223388919 };
+   int obs1Y[] = {308946224, 308904593, 307607694, 307618633 };
+
+   t_ObstaclesPtr obstacles = CreateObstacles();
+   SetObstaclesCount( 1, obstacles );
+   obstacles->m_obstacleMembersPtr = CreateSingleObstacleArray( 1 );
+   InsertSingleObstacle( sizeof( obs1X )/sizeof( int ), obs1X, obs1Y,GetSingleObstacle( 0, obstacles ));
+   return obstacles;
+}
+
+static int TestFullObstacle(
+   void
+   ) {
+   int lonTopLeft = 1225604106;
+   int latTopLeft = 308890180;
+   int lonBottomRight =  1227319960;
+   int latBottomRight =  307873053;
+   int width = 500;
+   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
+   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
+   t_ObstaclesPtr obstacles = GetFullObstacleInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    return TestTemplate( lonTopLeft, latTopLeft, lonBottomRight,
                         latBottomRight, width, obstacles );
