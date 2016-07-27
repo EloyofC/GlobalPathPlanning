@@ -128,7 +128,7 @@ static int TestTemplate(
    int width,
    t_ObstaclesPtr obstacles
    ) {
-   t_PathLinesPtr pathLines = DoCruiseGeneral( lonTopLeft, latTopLeft,
+   t_PathLinesPtr pathLines = GetScanLinesInRec( lonTopLeft, latTopLeft,
                                                lonBottomRight, latBottomRight,
                                                lonTopLeft, latTopLeft,
                                                lonBottomRight, latBottomRight,

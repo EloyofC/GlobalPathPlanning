@@ -20,7 +20,6 @@ typedef struct t_EnvPathLine
 {
    int m_xIndex;
    int m_yIndex;
-   int m_cost;                     /* used as debug info */
    struct t_EnvPathLine *m_prevPtr;
 } *t_EnvPathLinePtr;
 
@@ -41,12 +40,6 @@ static int GetEnvPathMemberY(
    return envPathLineMember->m_yIndex;
 }
 
-static int GetEnvPathMemberCost(
-   t_EnvPathLinePtr envPathLineMember
-   ) {
-   return envPathLineMember->m_cost;
-}
-
 static t_EnvPathLinePtr GetEnvPathMemberPrev(
    t_EnvPathLinePtr envPathLineMember
    ) {
@@ -60,7 +53,7 @@ static void PrintPathPoints(
    static int i = 0;
 
    for ( t_EnvPathLinePtr memberPrev = envPathLine; memberPrev != NULL; memberPrev = memberPrev->m_prevPtr )
-      printf( "%s : the %d nd point x %d y %d cost %d\n", str, i++, memberPrev->m_xIndex, memberPrev->m_yIndex, memberPrev->m_cost );
+      printf( "%s : the %d nd point x %d y %d\n", str, i++, memberPrev->m_xIndex, memberPrev->m_yIndex );
 }
 
 static void PrintPathFreePoints(
@@ -188,13 +181,11 @@ static int AStarPriority(
 static t_EnvPathLinePtr StoreNewDistributedMembers(
    int xIndex,
    int yIndex,
-   int cost,
    t_EnvPathLinePtr envPathLine
    ) {
    t_EnvPathLinePtr memberNew = Malloc( sizeof( struct t_EnvPathLine ) );
    memberNew->m_xIndex = xIndex;
    memberNew->m_yIndex = yIndex;
-   memberNew->m_cost = cost;
    memberNew->m_prevPtr = envPathLine;
 
    return memberNew;
@@ -207,7 +198,6 @@ static t_EnvPathLinePtr StoreNewPathMember(
    t_EnvPathLinePtr memberNew = Malloc( sizeof( struct t_EnvPathLine ) );
    memberNew->m_xIndex = GetEnvMemberX( envMember );
    memberNew->m_yIndex = GetEnvMemberY( envMember );
-   memberNew->m_cost = GetEnvMemberCost( envMember );
    memberNew->m_prevPtr = envPathLine;
 
    return memberNew;
@@ -249,23 +239,24 @@ static void StoreDistributedPoints(
    }
    if ( isGoUp ) {
       for ( i=j=0, yTemp = yMin; i < widthCount - 1; i++, j=j+2, yTemp += width ) {
-         sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yTemp, j, sg_distributedPoints );
-         sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yTemp, j+1, sg_distributedPoints );
+         sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yTemp, sg_distributedPoints );
+         sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yTemp, sg_distributedPoints );
          SwapNum( &itemp_x, &jtemp_x );
       }
-      sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yMax, j, sg_distributedPoints ); /* take care of the rest */
-      sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yMax, j+1, sg_distributedPoints );
+      sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yMax, sg_distributedPoints ); /* take care of the rest */
+      sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yMax, sg_distributedPoints );
    } else {
       for ( i=j=0, yTemp = yMax; i < widthCount - 1; i++, j=j+2, yTemp -= width ) {
-         sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yTemp, j, sg_distributedPoints );
-         sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yTemp, j+1, sg_distributedPoints );
+         sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yTemp, sg_distributedPoints );
+         sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yTemp, sg_distributedPoints );
          SwapNum( &itemp_x, &jtemp_x );
       }
-      sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yMin, j, sg_distributedPoints );
-      sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yMin, j+1, sg_distributedPoints );
+      sg_distributedPoints = StoreNewDistributedMembers( itemp_x, yMin, sg_distributedPoints );
+      sg_distributedPoints = StoreNewDistributedMembers( jtemp_x, yMin, sg_distributedPoints );
    }
 }
 
+/* This routine get the distributed points with the request of the scan search */
 static void GetDistributedPoints(
    int xStart,
    int yStart,
@@ -286,17 +277,19 @@ static void GetDistributedPoints(
    StoreDistributedPoints( min_x, min_y, max_x, max_y, xStart, yStart, width );
 }
 
-static int UpdateNearestFreePoint(
+/* This routine change the current cordinatation of the point to the nearest free point. It return False if no nearest free point exist  */
+static int UpdatePoint2NearestFreePoint(
    t_EnvPathLinePtr member,
    t_EnvironmentPtr environment
    ) {
    int xIndex = GetEnvPathMemberX( member );
    int yIndex = GetEnvPathMemberY( member );
-  
+
    if ( IsEnvMemberObstacle( GetEnvMember( xIndex, yIndex, environment )) ) {
       t_EnvironmentMemberPtr newFreeMember = SearchNearestFreePoint( xIndex, yIndex, environment );
+      /* if no nearest free point exist then return False */
       if ( newFreeMember == NULL ) {
-         return 0;			/* no nearest free points exist */
+         return 0;
       }
       member->m_xIndex = GetEnvMemberX( newFreeMember );
       member->m_yIndex = GetEnvMemberY( newFreeMember );
@@ -314,8 +307,9 @@ static int GetDistributedFreePoints(
    ) {
    GetDistributedPoints( xStart, yStart, xEnd, yEnd, width, environment );
    for ( t_EnvPathLinePtr member = sg_distributedPoints; member != NULL; member = GetEnvPathMemberPrev( member ) ) {
-      if ( UpdateNearestFreePoint( member, environment ) == 0 )
-         return 0;			/* No Free Points exist return the handle to the upper class */
+      /* if no nearest free point exist then return False */
+      if ( UpdatePoint2NearestFreePoint( member, environment ) == 0 )
+         return 0;
    }
    DebugCode(
       PrintPathFreePoints( sg_distributedPoints );
@@ -347,7 +341,7 @@ static void SearchFourNeighbour(
    int xIndex = GetEnvMemberX( member );
    int yIndex = GetEnvMemberY( member );
 
-   for (   unsigned long i=0; i < sizeof( x )/sizeof( int ); i++ )
+   for ( unsigned long i = 0; i < sizeof( x )/sizeof( int ); i++ )
       SearchOneNode( xIndex + x[ i ], yIndex + y[ i ], environment );
 }
 
@@ -362,7 +356,7 @@ t_EnvironmentMemberPtr SearchNearestFreePoint(
    ResetEnvAllFlag( environment );
    sg_nearQueue =  CreateFifoQueue();
    t_EnvironmentMemberPtr member = GetEnvMember( xIndex, yIndex, environment );
-  
+
    for ( ; IsEnvMemberObstacle( member ); member = DeFifoQueue( sg_nearQueue ) ) {
       SearchFourNeighbour( member, environment );
    }
@@ -400,12 +394,15 @@ static t_EnvPathLinePtr StoreEnvPathLine(
    ) {
    t_EnvPathLinePtr envPathLineNew = NULL;
 
-   for ( t_EnvironmentMemberPtr memberPrev = GetEnvMember( xEnd, yEnd, environment ); memberPrev != NULL; memberPrev = GetEnvMemberPrev( memberPrev ) ) {
+   for ( t_EnvironmentMemberPtr memberPrev = GetEnvMember( xEnd, yEnd, environment );
+         memberPrev != NULL;
+         memberPrev = GetEnvMemberPrev( memberPrev ) ) {
       DebugCodeDetail(
          static int i = 1;
          printf( "StoreEnvPathLine : %d nd search Searched Member has X %d, Y %d, Cost %d\n", i++, GetEnvMemberX( memberPrev ), GetEnvMemberY( memberPrev ), GetEnvMemberCost( memberPrev ) );
          fflush( stdout );
          );
+
       envPathLineNew = StoreNewPathMember( memberPrev, envPathLineNew );
    }
 
@@ -454,11 +451,13 @@ static int IsThreePointInALine(
    }
 }
 
-static void FilterPathLinePoints(
+static void FilterNotInALinePathLinePoints(
    void
    ) {
    while ( IsDoubleNextEnvPathLineExist() ) {
-      if ( IsThreePointInALine( GetEnvPathX(), GetEnvPathY(), GetNextEnvPathLineX(), GetNextEnvPathLineY(), GetDoubleNextEnvPathLineX(), GetDoubleNextEnvPathLineY() ) ) {
+      if ( IsThreePointInALine( GetEnvPathX(), GetEnvPathY(),
+                                GetNextEnvPathLineX(), GetNextEnvPathLineY(),
+                                GetDoubleNextEnvPathLineX(), GetDoubleNextEnvPathLineY() ) ) {
          SkipPathLinePoint();
       }else {
          break;
@@ -474,7 +473,7 @@ static t_PathLinesPtr GetEnvPathLines(
       int x = GetEnvPathX();
       int y = GetEnvPathY();
       InsertNewFinalPathPoint( x, y, finalPathLines );
-      FilterPathLinePoints();
+      FilterNotInALinePathLinePoints();
    }
    return finalPathLines;
 }
@@ -549,7 +548,7 @@ static void TurnEnvY2GpsLat(
    t_PathPointPtr finalPathPoint,
    t_EnvironmentPtr environment
    ) {
-   int y =  GetFinalPathPointY( finalPathPoint ) * GetEnvWidthOfUnit( environment );
+   int y = GetFinalPathPointY( finalPathPoint ) * GetEnvWidthOfUnit( environment );
    int yTopLeft = GetEnvTopLeftLat( environment );
    int latGps = GetGpsLatFromDistance( y, yTopLeft );
    SetFinalPathPointY( latGps, finalPathPoint );
@@ -586,6 +585,7 @@ static int AstarInlocal(
    return DoSomePathPlanning( xStart, yStart, xEnd, yEnd, AStarPriority, ComparePriority, environment );
 }
 
+/* This routine use the A* algorithm to find the shortest path between the start and the end point with the unclean environment(may be used by the former partialpathsearch). It returns 1 if the search is success, otherwise it returns false */
 int PartialPathSearch(
    int xStart,
    int yStart,
@@ -601,11 +601,14 @@ int PartialPathSearch(
       printf( "PartialPathSearch : Searching Between x %d y %d to x %d y %d\n", xStart, yStart, xEnd, yEnd );
       fflush( stdout );
       );
+
    if ( AstarInlocal( xStart, yStart, xEnd, yEnd, environment ) == 0 ) {
+
       DebugCodeDetail (
          printf( "PartialPathSearch : Search Between x %d y %d to x %d y %d is wrong\n", xStart, yStart, xEnd, yEnd );
          fflush( stdout );
          );
+
       sg_envPathLines = FreePathLine( sg_envPathLines );
       return 0;
    }
@@ -613,7 +616,7 @@ int PartialPathSearch(
    return 1;
 }
 
-
+/* This routine first get the Distributed Free(not a obstacle) points between the start points and end points, then use the path plan search for the every neighbouring distributed points. This routine return 1 if the scansearch is success, otherwise return 0 */
 int ScanSearch(
    int xStart,
    int yStart,
@@ -628,15 +631,16 @@ int ScanSearch(
    assert( yEnd >= 0 && yEnd <= GetEnvWidth( environment) );
    assert( sg_distributedPoints == NULL );
 
+   /* if no free points exist, then return false */
    if ( GetDistributedFreePoints( xStart, yStart, xEnd, yEnd, width, environment) == 0 ) {
       sg_distributedPoints = FreePathLine( sg_distributedPoints );
-      return 0;			/* no free points exist */
+      return 0;
    }
 
+   /* Do the path plan search between every neighbouring distribute points */
    t_EnvPathLinePtr member = sg_distributedPoints;
    int xPrev = GetEnvPathMemberX( member );
    int yPrev = GetEnvPathMemberY( member );
-   /*  */
    for ( member = GetEnvPathMemberPrev( member ); member != NULL; member = GetEnvPathMemberPrev( member ) ) {
        /* handle the situation of no way */
       if ( PartialPathSearch( xPrev, yPrev, GetEnvPathMemberX( member ), GetEnvPathMemberY( member ), environment ) == 0 ) {
