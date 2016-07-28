@@ -140,7 +140,7 @@ static int CalGpsPointYInEnv(
    t_PointCorPtr obstaclePoint,
    t_EnvironmentPtr environment
    ) {
-   int widthOfUnit = GetEnvWidthOfUnit( environment );
+   int heightOfUnit = GetEnvHeightOfUnit( environment );
    int lonPoint = GetPointCorLon( obstaclePoint );
    int latPoint = GetPointCorLat( obstaclePoint );
    int topLeftLat =  GetEnvTopLeftLat( environment );
@@ -148,7 +148,7 @@ static int CalGpsPointYInEnv(
    if ( latPoint > topLeftLat ) {	/* if y is > 0 it should < the topleft */
       disLat = -1 *disLat;
    }
-   return disLat / widthOfUnit;
+   return disLat / heightOfUnit;
 }
 
 static int GetAdaptPointX(
@@ -948,7 +948,7 @@ static void SetSingleObstacleInEnvironment(
    assert( singleObstacle != NULL );
 
    t_AdaptPointPtr adaptPoints = GetAdaptPoints( singleObstacle, environment );
-   int height = GetEnvWidth( environment );
+   int height = GetEnvHeight( environment );
    t_EdgeTablePtr edgeTable = GetAllEnvEdges( height, adaptPoints );
    FreeAdaptPoints( adaptPoints );
    t_ActiveEdgeTablePtr activeEdgeTable = CreateActiveEdgeTable( edgeTable );

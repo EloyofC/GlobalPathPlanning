@@ -15,7 +15,7 @@ def get_env_para(testlog):
         obstacles = []
         size = None
         for each_line in fobj.readlines():
-            match_size = re.match('PrintEnvironment : .*length (\\d+).*width (\\d+)', each_line)
+            match_size = re.match('InitialEnvWithCell : .*x (\\d+).*y (\\d+)', each_line)
             if match_size:
                 size = tuple([int(i) for i in match_size.groups()])
             match_obstacle = re.match('PrintEnvironmentMember :.*x (\\d+).*y (\\d+).*with obstacle$', each_line)
@@ -48,7 +48,7 @@ def plot_env(size, obstacles, path_points):
     env_scatter.set_title("Obstacles In Environment")
     length, width = size
     env_scatter.set_xlabel("Length %d" % (length))
-    env_scatter.set_ylabel("Width %d " % (width))
+    env_scatter.set_ylabel("Height %d " % (width))
     env_scatter.set_xlim([0, length])
     env_scatter.set_ylim([0, width])
     obsx = [single_obstacle[0] for single_obstacle in obstacles]

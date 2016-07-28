@@ -24,9 +24,9 @@ struct t_EnvMember
 struct t_Environment
 {
    int m_envLength;
-   int m_envWidth;
+   int m_envHeight;
    int m_lengthOfUnit;
-   int m_widthOfUnit;
+   int m_heightOfUnit;
    int m_xStart;
    int m_yStart;
    int m_xEnd;
@@ -41,19 +41,19 @@ struct t_Environment
 
 static void InitialEnvironment(
    int length,
-   int width,
+   int height,
    int lonTopLeft,
    int latTopLeft,
    int lonBottomRight,
    int latBottomRight,
    int lengthOfUnit,
-   int widthOfUnit,
+   int heightOfUnit,
    t_EnvironmentPtr environment
    ) {
    environment->m_envLength = length;
-   environment->m_envWidth = width;
+   environment->m_envHeight = height;
    environment->m_lengthOfUnit = lengthOfUnit;
-   environment->m_widthOfUnit = widthOfUnit;
+   environment->m_heightOfUnit = heightOfUnit;
    environment->m_xStart = 0;
    environment->m_yStart = 0;
    environment->m_xEnd = 0;
@@ -83,33 +83,33 @@ static void InitialEnvironmentMember(
 /* Assume the relation between cordinatation of the environment and index is top and left to 0 and right and down to 1 */
 static t_EnvironmentPtr CreateEnvironment(
    int length,
-   int width
+   int height
    ) {
    t_EnvironmentPtr environment = Malloc( sizeof( struct t_Environment ) );
-   environment->m_envMembersPtr = Malloc( sizeof( struct t_EnvMember ) * length * width );
+   environment->m_envMembersPtr = Malloc( sizeof( struct t_EnvMember ) * length * height );
    return environment;
 }
 
-/* If the size of environment is not equal length * width, the rest will in the last row and col, it means the last will be big
+/* If the size of environment is not equal length * height, the rest will in the last row and col, it means the last will be big
    and the TopLeft and BottomRight index is gps data */
 static t_EnvironmentPtr InitialEnvWithCell(
    int length,
-   int width,
+   int height,
    int lengthOfUnit,
-   int widthOfUnit,
+   int heightOfUnit,
    int lonTopLeft,
    int latTopLeft,
    int lonBottomRight,
    int latBottomRight
    ) {
    int xIndex = length / lengthOfUnit + 1; /* cos the length is indeed to be double type so plus 1 */
-   int yIndex = width / widthOfUnit + 1;
+   int yIndex = height / heightOfUnit + 1;
 
    DebugCode (
-      printf( "InitialEnvWithCell : x %d y%d\n", xIndex, yIndex );
+      printf( "InitialEnvWithCell : x %d y %d\n", xIndex, yIndex );
       );
    t_EnvironmentPtr environment = CreateEnvironment( xIndex, yIndex );
-   InitialEnvironment( xIndex, yIndex, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, lengthOfUnit, widthOfUnit, environment );
+   InitialEnvironment( xIndex, yIndex, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight, lengthOfUnit, heightOfUnit, environment );
    for ( int i = 0; i < xIndex; i++ )
       for ( int j = 0; j < yIndex; j++ )
          InitialEnvironmentMember( i, j, environment );
@@ -119,7 +119,7 @@ static t_EnvironmentPtr InitialEnvWithCell(
 
 t_EnvironmentPtr InitialEnvWithGps(
    int lengthOfUnit,
-   int widthOfUnit,
+   int heightOfUnit,
    int lonTopLeft,
    int latTopLeft,
    int lonBottomRight,
@@ -129,14 +129,14 @@ t_EnvironmentPtr InitialEnvWithGps(
    assert( latTopLeft >= latBottomRight ); /* need to confirm the number range */
 
    int length = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonBottomRight );
-   int width = CalGpsDistanceLat( lonTopLeft, latTopLeft, latBottomRight );
+   int height = CalGpsDistanceLat( lonTopLeft, latTopLeft, latBottomRight );
 
    DebugCode (
-      printf( "InitialEnvWithGps : length %d width %d\n", length, width );
+      printf( "InitialEnvWithGps : length %d height %d\n", length, height );
       fflush( stdout );
       );
 
-   t_EnvironmentPtr environmentNew = InitialEnvWithCell( length, width, lengthOfUnit, widthOfUnit, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight );
+   t_EnvironmentPtr environmentNew = InitialEnvWithCell( length, height, lengthOfUnit, heightOfUnit, lonTopLeft, latTopLeft, lonBottomRight, latBottomRight );
 
    return environmentNew;
 }
@@ -181,10 +181,10 @@ static void PrintEnvironmentMember(
 void PrintEnvironment(
    t_EnvironmentPtr environment
    ) {
-   printf( "PrintEnvironment : The Environment with length %d width %d\n",
-           environment->m_envLength, environment->m_envWidth );
+   printf( "PrintEnvironment : The Environment with length %d height %d\n",
+           environment->m_envLength, environment->m_envHeight );
    for ( int i = 0; i < environment->m_envLength; i++ )
-      for ( int j = 0; j < environment->m_envWidth; j++ )
+      for ( int j = 0; j < environment->m_envHeight; j++ )
          PrintEnvironmentMember( i, j, environment );
 }
 
@@ -193,7 +193,7 @@ void ResetEnvironment(
    t_EnvironmentPtr environment
    ) {
     for ( int i = 0; i < environment->m_envLength; i++ )
-      for ( int j = 0; j < environment->m_envWidth; j++ )
+      for ( int j = 0; j < environment->m_envHeight; j++ )
          ResetEnvironmentMember( i, j, environment );
 }
 
@@ -241,10 +241,10 @@ int GetEnvLength(
    return environment->m_envLength;
 }
 
-int GetEnvWidth(
+int GetEnvHeight(
    t_EnvironmentPtr environment
    ) {
-   return environment->m_envWidth;
+   return environment->m_envHeight;
 }
 
 int GetEnvStartX(
@@ -281,7 +281,7 @@ void ResetEnvAllNotSearched(
    t_EnvironmentPtr environment
    ) {
    for ( int i = 0; i < environment->m_envLength; i++ )
-      for ( int j = 0; j < environment->m_envWidth; j++ ) {
+      for ( int j = 0; j < environment->m_envHeight; j++ ) {
           t_EnvironmentMemberPtr member = GetEnvMember( i, j, environment );
          member->m_searched = 0;
       }
@@ -434,7 +434,7 @@ int IsEnvPointInEnv(
    t_EnvironmentPtr environment
    ) {
    return xIndex >= 0 && xIndex < GetEnvLength( environment ) &&
-      yIndex >= 0 && yIndex < GetEnvWidth( environment );
+      yIndex >= 0 && yIndex < GetEnvHeight( environment );
 }
 
 int IsSearchEnd(
@@ -469,10 +469,10 @@ int GetEnvLengthOfUnit(
    return environment->m_lengthOfUnit;
 }
 
-int GetEnvWidthOfUnit(
+int GetEnvHeightOfUnit(
    t_EnvironmentPtr environment
    ) {
-   return environment->m_widthOfUnit;
+   return environment->m_heightOfUnit;
 }
 
 void FreeEnvMember(

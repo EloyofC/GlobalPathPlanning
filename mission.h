@@ -20,35 +20,49 @@ typedef struct t_SingleObstacle
 
 typedef struct t_PointCor
 {
-  int m_lon;
-  int m_lat;
+   int m_lon;
+   int m_lat;
 } *t_PointCorPtr;
 
 typedef struct t_PathLines
 {
-int m_pointCounts;
-struct t_PathPoint *m_pathPoints;
+   int m_pointCounts;
+   struct t_PathPoint *m_pathPoints; /* the path point in the front is visited last? */
 } *t_PathLinesPtr;
 
 typedef struct t_PathPoint
 {
-int m_lon;
-int m_lat;
-struct t_PathPoint *m_next;
+   int m_lon;
+   int m_lat;
+   struct t_PathPoint *m_next;
 } *t_PathPointPtr;
+
+struct t_RectangleArea
+{
+   int m_lonTopLeft;
+   int m_latTopLeft;
+   int m_lonBottomRight;
+   int m_latBottomRight;
+};
+
+struct t_ScanWidthInfo
+{
+   int m_width;
+   int m_isHorizon;             /* horizon with 1, vertical with 2 */
+};
 
 struct t_ExpectedCruiseCricle
 {
-int lonCircleCenter;            /* type of gps */
-int latCircleCenter;
-int circleRadius;
+   int m_lonCircleCenter;            /* type of gps */
+   int m_latCircleCenter;
+   int m_circleRadius;
 };
 
-t_PathLinesPtr GetScanLinesInRec( int lonStart, int latStart, int lonEnd, int latEnd, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, int width, t_ObstaclesPtr obstacles );
-t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
-t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight, t_ObstaclesPtr obstacles);
+t_PathLinesPtr GetScanLinesInRec( int lonStart, int latStart, int lonEnd, int latEnd, struct t_RectangleArea rectangle, struct t_ScanWidthInfo widthInfo, t_ObstaclesPtr obstacles );
+t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle,  struct t_RectangleArea rectangle, t_ObstaclesPtr obstacles);
+t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, struct t_RectangleArea rectangle, t_ObstaclesPtr obstacles);
 void FreeFinalPathLines( t_PathLinesPtr finalPathLines );
-void PrintGpsPathLines( t_PathLinesPtr finalPathLines );
-void PrintEnvPathLines( t_PathLinesPtr finalPathLines );
+void PrintFinalGpsPathLines( t_PathLinesPtr finalPathLines );
+void PrintInEnvPathLines( t_PathLinesPtr finalPathLines );
 
 #endif

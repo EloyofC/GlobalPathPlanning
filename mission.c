@@ -7,7 +7,7 @@
 #include "advancedplan.h"
 
 #define c_lengthOfUnit 100
-#define c_widthOfUnit 100
+#define c_heightOfUnit 100
 
 static t_EnvironmentPtr InitialEnvWithObstacles(
    int lonTopLeft,
@@ -16,11 +16,47 @@ static t_EnvironmentPtr InitialEnvWithObstacles(
    int latBottomRight,
    t_ObstaclesPtr obstacles
    ) {
-   t_EnvironmentPtr newEnvironment = InitialEnvWithGps( c_lengthOfUnit, c_widthOfUnit,
+   t_EnvironmentPtr newEnvironment = InitialEnvWithGps( c_lengthOfUnit, c_heightOfUnit,
                                                         lonTopLeft, latTopLeft,
                                                         lonBottomRight, latBottomRight );
    SetObstaclesInEnvironment( obstacles, newEnvironment );
    return newEnvironment;
+}
+
+static int GetLonTopLeftFromRec(
+   struct t_RectangleArea rectangle
+   ) {
+   return rectangle.m_lonTopLeft;
+}
+
+static int GetLatTopLeftFromRec(
+   struct t_RectangleArea rectangle
+   ) {
+   return rectangle.m_latTopLeft;
+}
+
+static int GetLonBottomRightFromRec(
+   struct t_RectangleArea rectangle
+   ) {
+   return rectangle.m_lonBottomRight;
+}
+
+static int GetLatBottomRightFromRec(
+   struct t_RectangleArea rectangle
+   ) {
+   return rectangle.m_latBottomRight;
+}
+
+static int GetWidthFromScanWidthInfo(
+   struct t_ScanWidthInfo widthInfo
+   ) {
+   return widthInfo.m_width;
+}
+
+static int IsScanWidthHorizon(
+   struct t_ScanWidthInfo widthInfo
+   ) {
+   return widthInfo.m_isHorizon == 1;
 }
 
 t_PathLinesPtr GetScanLinesInRec(
@@ -28,55 +64,73 @@ t_PathLinesPtr GetScanLinesInRec(
    int latStart,
    int lonEnd,
    int latEnd,
-   int lonTopLeft,
-   int latTopLeft,
-   int lonBottomRight,
-   int latBottomRight,
-   int width,
+   struct t_RectangleArea rectangle,
+   struct t_ScanWidthInfo widthInfo,
    t_ObstaclesPtr obstacles
    ) {
+   int lonTopLeft = GetLonTopLeftFromRec( rectangle );
+   int latTopLeft = GetLatTopLeftFromRec( rectangle );
+   int lonBottomRight = GetLonBottomRightFromRec( rectangle );
+   int latBottomRight = GetLatBottomRightFromRec( rectangle );
    int cellStartX = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonStart ) / c_lengthOfUnit;
-   int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_widthOfUnit;
+   int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_heightOfUnit;
    int cellEndX =  CalGpsDistanceLon( lonTopLeft, latTopLeft, lonEnd ) / c_lengthOfUnit;
-   int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_widthOfUnit;
-   /* ensure that the cellWidth is larger than 1 */
-   int cellWidth = width < c_widthOfUnit ? 1 : width / c_widthOfUnit;
+   int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_heightOfUnit;
    t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
                                                               lonBottomRight, latBottomRight,
                                                               obstacles );
 
    int endPointX = cellEndX - 1;
    int endPointY = cellEndY - 1;
-   t_PathLinesPtr pathLines = ScanSearch( cellStartX, cellStartY,
-                                     endPointX, endPointY,
-                                     cellWidth,
-                                     newEnvironment );
+   int width = GetWidthFromScanWidthInfo( widthInfo );
+   t_PathLinesPtr finalPathLine = NULL;
+   if ( IsScanWidthHorizon( widthInfo ) ) {
+      /* ensure that the cellWidth is larger than 1 */
+      int cellWidth = width < c_heightOfUnit ? 1 : width / c_heightOfUnit;
+      finalPathLine = ScanSearch( cellStartX, cellStartY,
+                                  endPointX, endPointY,
+                                  cellWidth,
+                                  newEnvironment );
+   } else {
+      int cellWidth = width < c_lengthOfUnit ? 1 : width / c_lengthOfUnit;
+      finalPathLine = ScanSearch( cellStartX, cellStartY,
+                                  endPointX, endPointY,
+                                  cellWidth,
+                                  newEnvironment );
+   }
    DeleteEnvironment( newEnvironment );
-   return pathLines;
+   return finalPathLine;
 }
 
 t_PathLinesPtr GetCruisePointsInCircle(
    struct t_ExpectedCruiseCricle circle,
-   int lonTopLeft,
-   int latTopLeft,
-   int lonBottomRight,
-   int latBottomRight,
+   struct t_RectangleArea rectangle,
    t_ObstaclesPtr obstacles
    ){
-   
+   int lonTopLeft = GetLonTopLeftFromRec( rectangle );
+   int latTopLeft = GetLatTopLeftFromRec( rectangle );
+   int lonBottomRight = GetLonBottomRightFromRec( rectangle );
+   int latBottomRight = GetLatBottomRightFromRec( rectangle );
+   t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
+                                                              lonBottomRight,latBottomRight,
+                                                              obstacles );
 }
 
 t_PathLinesPtr GetPointsWithFixedMultiPosition(
    t_PathLinesPtr positions,
-   int lonTopLeft,
-   int latTopLeft,
-   int lonBottomRight,
-   int latBottomRight,
+   struct t_RectangleArea rectangle,
    t_ObstaclesPtr obstacles
    ){
+   int lonTopLeft = GetLonTopLeftFromRec( rectangle );
+   int latTopLeft = GetLatTopLeftFromRec( rectangle );
+   int lonBottomRight = GetLonBottomRightFromRec( rectangle );
+   int latBottomRight = GetLatBottomRightFromRec( rectangle );
    t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
                                                               lonBottomRight, latBottomRight,
                                                               obstacles );
+   t_PathLinesPtr finalPathLine = MultiGpsPosPathPlan( positions, newEnvironment );
+   DeleteEnvironment( newEnvironment );
+   return finalPathLine;
 }
 
 static void FreeFinalPathPoints(
@@ -85,74 +139,27 @@ static void FreeFinalPathPoints(
    t_PathPointPtr pathPointTemp;
 
    for ( ; pathPointHead != NULL; pathPointHead = pathPointTemp ) {
-      pathPointTemp = pathPointHead->m_next;
-      free( pathPointHead );
+      pathPointTemp = GetGpsPathPointNext( pathPointHead );
+      Free( pathPointHead );
    }
-}
-
-static t_PathPointPtr GetFinalLinePoints(
-   t_PathLinesPtr finalPathLines
-   ) {
-   return finalPathLines->m_pathPoints;
 }
 
 void FreeFinalPathLines(
    t_PathLinesPtr finalPathLines
    ) {
-   FreeFinalPathPoints( GetFinalLinePoints( finalPathLines ) );
-   free( finalPathLines );
+   FreeFinalPathPoints( GetGpsPathLinePoints( finalPathLines ) );
+   Free( finalPathLines );
 }
 
-static int GetFinalLinePointCount(
-   t_PathLinesPtr finalPathLines
+void PrintInEnvPathLines(
+   t_PathLinesPtr pathLine
    ) {
-   return finalPathLines->m_pointCounts;
+   PrintGpsPathLines( pathLine, "The env pass point");
 }
 
-static int GetFinalPathPointLon(
-   t_PathPointPtr pathPoint
+void PrintFinalGpsPathLines(
+   t_PathLinesPtr pathLine
    ) {
-   return pathPoint->m_lon;
-}
-
-static int GetFinalPathPointLat(
-   t_PathPointPtr pathPoint
-   ) {
-   return pathPoint->m_lat;
-}
-
-static t_PathPointPtr GetFinalPathPointNext(
-   t_PathPointPtr pathPoint
-   ) {
-   return pathPoint->m_next;
-}
-
-static void PrintFinalPathLines(
-   t_PathLinesPtr finalPathLines,
-   char *str
-   ) {
-   if ( finalPathLines != NULL ) {
-      int count = GetFinalLinePointCount( finalPathLines );
-      t_PathPointPtr pathPoints = GetFinalLinePoints( finalPathLines );
-
-      for ( int i = 0; i < count; i++ ) {
-         printf( "%s : the %d nd point x %d y %d\n", str, i, GetFinalPathPointLon( pathPoints ), GetFinalPathPointLat( pathPoints ) );
-         pathPoints = GetFinalPathPointNext( pathPoints );
-      }
-   } else {
-      return;
-   }
-}
-
-void PrintEnvPathLines(
-   t_PathLinesPtr finalPathLines
-   ) {
-   PrintFinalPathLines( finalPathLines, "The env pass point");
-}
-
-void PrintGpsPathLines(
-   t_PathLinesPtr finalPathLines
-   ) {
-   PrintFinalPathLines( finalPathLines, "The gps path line" );
+   PrintGpsPathLines( pathLine, "The gps path line" );
 }
 

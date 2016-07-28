@@ -45,11 +45,12 @@ static t_EnvPathLinePtr GetEnvPathMemberPrev(
 static void PrintEntirePathMembers(
    t_EnvPathLinePtr envPathLine
    ) {
-   static int i = 0;
+   int i = 0;
 
    for ( t_EnvPathLinePtr memberPrev = envPathLine; memberPrev != NULL; memberPrev = memberPrev->m_prevPtr )
       printf( "The entire final pass point : the %d nd point x %d y %d\n", i++, memberPrev->m_xIndex, memberPrev->m_yIndex );
 }
+
 
 static void FreePathLine(
    t_EnvPathLinePtr envPathLine
@@ -155,16 +156,34 @@ static t_EnvPathLinePtr StoreNewDistributedMembers(
    return memberNew;
 }
 
+static t_EnvPathLinePtr CreateEnvPathLine(
+   int x,
+   int y
+   ) {
+   t_EnvPathLinePtr memberNew = Malloc( sizeof( struct t_EnvPathLine ) );
+   memberNew->m_xIndex = x;
+   memberNew->m_yIndex = y;
+   return memberNew;
+}
+
+static t_EnvPathLinePtr InsertNewEnvPathLine(
+   int x,
+   int y,
+   t_EnvPathLinePtr envPathLine
+   ) {
+   t_EnvPathLinePtr memberNew = CreateEnvPathLine( x, y );
+   memberNew->m_prevPtr = envPathLine;
+
+   return memberNew;
+}
+
 static t_EnvPathLinePtr StoreNewPathMember(
    t_EnvironmentMemberPtr envMember,
    t_EnvPathLinePtr envPathLine
    ) {
-   t_EnvPathLinePtr memberNew = Malloc( sizeof( struct t_EnvPathLine ) );
-   memberNew->m_xIndex = GetEnvMemberX( envMember );
-   memberNew->m_yIndex = GetEnvMemberY( envMember );
-   memberNew->m_prevPtr = envPathLine;
-
-   return memberNew;
+   int x = GetEnvMemberX( envMember );
+   int y = GetEnvMemberY( envMember );
+   return InsertNewEnvPathLine( x, y, envPathLine );
 }
 
 static int IsNumEven(
@@ -291,11 +310,16 @@ static t_EnvironmentMemberPtr SearchNearestFreePoint(
    t_FifoQueuePtr nearQueue =  CreateFifoQueue();
    t_EnvironmentMemberPtr member = GetEnvMember( xIndex, yIndex, environment );
 
-   for ( ; IsEnvMemberObstacle( member ); member = DeFifoQueue( nearQueue ) ) {
+   for ( ; member != NULL && IsEnvMemberObstacle( member ); member = DeFifoQueue( nearQueue ) ) {
       nearQueue = SearchFourNeighbour( member, nearQueue, environment );
    }
-   FreeFifoQueue( nearQueue );
-   return member;
+   if ( member == NULL ) {
+         FreeFifoQueue( nearQueue );
+         return NULL;
+   } else {
+      FreeFifoQueue( nearQueue );
+      return member;
+   }
 }
 
 /* This routine change the current cordinatation of the point to the nearest free point. It return False if no nearest free point exist  */
@@ -369,26 +393,49 @@ static t_EnvPathLinePtr StoreEnvPathLine(
    return envPathLine;
 }
 
-static t_PathLinesPtr CreateFinalPathLine(
+t_PathLinesPtr CreateGpsPathLine(
    void
    ) {
-   t_PathLinesPtr finalPathLineNew = Malloc( sizeof( struct t_PathLines ) );
-   finalPathLineNew->m_pointCounts = 0;
-   finalPathLineNew->m_pathPoints = NULL;
-   return finalPathLineNew;
+   t_PathLinesPtr pathLineNew = Malloc( sizeof( struct t_PathLines ) );
+   pathLineNew->m_pointCounts = 0;
+   pathLineNew->m_pathPoints = NULL;
+   return pathLineNew;
 }
 
-static void InsertNewFinalPathPoint(
+void InsertNewGpsPathPoint(
    int x,
    int y,
-   t_PathLinesPtr finalPathLine
+   t_PathLinesPtr pathLine
    ) {
-   t_PathPointPtr finalPointNew = Malloc( sizeof( struct t_PathPoint ) );
-   finalPointNew->m_lon = x;
-   finalPointNew->m_lat = y;
-   finalPointNew->m_next = finalPathLine->m_pathPoints;
-   finalPathLine->m_pathPoints = finalPointNew;
-   finalPathLine->m_pointCounts++;
+   t_PathPointPtr pointNew = Malloc( sizeof( struct t_PathPoint ) );
+   pointNew->m_lon = x;
+   pointNew->m_lat = y;
+   pointNew->m_next = pathLine->m_pathPoints;
+   pathLine->m_pathPoints = pointNew;
+   pathLine->m_pointCounts++;
+}
+
+void PrintGpsPathLines(
+   t_PathLinesPtr pathLine,
+   char *str
+   ) {
+   if ( pathLine != NULL ) {
+      int count = GetGpsPathLinePointCount( pathLine );
+      t_PathPointPtr pathPoints = GetGpsPathLinePoints( pathLine );
+
+      for ( int i = 0; i < count; i++ ) {
+         printf( "%s : the %d nd point x %d y %d\n", str, i, GetGpsPathPointLon( pathPoints ), GetGpsPathPointLat( pathPoints ) );
+         pathPoints = GetGpsPathPointNext( pathPoints );
+      }
+   } else {
+      return;
+   }
+}
+
+static void PrintPosPathLines(
+   t_PathLinesPtr pathLine
+   ) {
+   PrintGpsPathLines( pathLine, "The position path line" );
 }
 
 static int IsThreePointInALine(
@@ -430,10 +477,10 @@ static t_EnvPathLinePtr FilterInALinePathLineMembers(
    return currentEnvPathLine;
 }
 
-static t_PathLinesPtr GetFinalPathLine(
+static t_PathLinesPtr GetGpsPathLineFromEnvPathLine(
    t_EnvPathLinePtr envPathLine
    ) {
-   t_PathLinesPtr finalPathLine = CreateFinalPathLine();
+   t_PathLinesPtr pathLine = CreateGpsPathLine();
    DebugCode(
       PrintEntirePathMembers( envPathLine );
       );
@@ -442,38 +489,56 @@ static t_PathLinesPtr GetFinalPathLine(
          currentEnvPathLine =  SkipPathLineMember( currentEnvPathLine ) ) {
       int x = GetEnvPathMemberX( currentEnvPathLine );
       int y = GetEnvPathMemberY( currentEnvPathLine );
-      printf( "GetFinalPathLine : x %d y %d\n", x, y);
+      printf( "GetGpsPathLineFromEnvPathLine : x %d y %d\n", x, y);
       fflush( stdout );
-      InsertNewFinalPathPoint( x, y, finalPathLine );
+      InsertNewGpsPathPoint( x, y, pathLine );
       currentEnvPathLine = FilterInALinePathLineMembers( currentEnvPathLine );
    }
-   return finalPathLine;
+   return pathLine;
 }
 
-static int GetFinalPathPointX(
-   t_PathPointPtr finalPathPoint
+int GetGpsPathPointLon(
+   t_PathPointPtr pathPoint
    ) {
-   return finalPathPoint->m_lon;
+   return pathPoint->m_lon;
 }
 
-static int GetFinalPathPointY(
-   t_PathPointPtr finalPathPoint
+int GetGpsPathPointLat(
+   t_PathPointPtr pathPoint
    ) {
-   return finalPathPoint->m_lat;
+   return pathPoint->m_lat;
 }
 
-static void SetFinalPathPointX(
+t_PathPointPtr GetGpsPathPointNext(
+   t_PathPointPtr pathPoint
+   ) {
+   return pathPoint->m_next;
+}
+
+static void SetPathPointLon(
    int x,
-   t_PathPointPtr finalPathPoint
+   t_PathPointPtr pathPoint
    ) {
-   finalPathPoint->m_lon = x;
+   pathPoint->m_lon = x;
 }
 
-static void SetFinalPathPointY(
+static void SetPathPointLat(
    int y,
-   t_PathPointPtr finalPathPoint
+   t_PathPointPtr pathPoint
    ) {
-   finalPathPoint->m_lat = y;
+   pathPoint->m_lat = y;
+}
+
+t_PathPointPtr GetGpsPathLinePoints(
+   t_PathLinesPtr pathLines
+   ) {
+   return pathLines->m_pathPoints;
+}
+
+int GetGpsPathLinePointCount(
+   t_PathLinesPtr pathLines
+   ) {
+   return pathLines->m_pointCounts;
 }
 
 /*
@@ -496,14 +561,14 @@ static int GetGpsLonFromDistance(
 }
 
 static void TurnEnvX2GpsLon(
-   t_PathPointPtr finalPathPoint,
+   t_PathPointPtr pathPoint,
    t_EnvironmentPtr environment
    ) {
-   int x = GetFinalPathPointX( finalPathPoint ) * GetEnvLengthOfUnit( environment );
+   int x = GetGpsPathPointLon( pathPoint ) * GetEnvLengthOfUnit( environment );
    int xTopLeft = GetEnvTopLeftLon( environment );
    int yTopLeft = GetEnvTopLeftLat( environment );
    int lonGps = GetGpsLonFromDistance( x, xTopLeft, yTopLeft );
-   SetFinalPathPointX( lonGps, finalPathPoint );
+   SetPathPointLon( lonGps, pathPoint );
 }
 
 static int GetGpsLatFromDistance(
@@ -517,35 +582,83 @@ static int GetGpsLatFromDistance(
 }
 
 static void TurnEnvY2GpsLat(
-   t_PathPointPtr finalPathPoint,
+   t_PathPointPtr pathPoint,
    t_EnvironmentPtr environment
    ) {
-   int y = GetFinalPathPointY( finalPathPoint ) * GetEnvWidthOfUnit( environment );
+   int y = GetGpsPathPointLat( pathPoint ) * GetEnvHeightOfUnit( environment );
    int yTopLeft = GetEnvTopLeftLat( environment );
    int latGps = GetGpsLatFromDistance( y, yTopLeft );
-   SetFinalPathPointY( latGps, finalPathPoint );
+   SetPathPointLat( latGps, pathPoint );
 }
 
 static void TurnEnv2GpsPathLine(
-   t_PathLinesPtr finalPathLine,
+   t_PathLinesPtr pathLine,
    t_EnvironmentPtr environment
    ) {
-   for ( t_PathPointPtr finalPathPoints = finalPathLine->m_pathPoints; finalPathPoints != NULL; finalPathPoints = finalPathPoints->m_next ) {
-      TurnEnvX2GpsLon( finalPathPoints, environment );
-      TurnEnvY2GpsLat( finalPathPoints, environment );
+   for ( t_PathPointPtr pathPoints = pathLine->m_pathPoints; pathPoints != NULL; pathPoints = pathPoints->m_next ) {
+      TurnEnvX2GpsLon( pathPoints, environment );
+      TurnEnvY2GpsLat( pathPoints, environment );
    }
 }
 
-static t_PathLinesPtr GetGpsPathLine(
+static t_PathLinesPtr GetFinalGpsPathLine(
    t_EnvPathLinePtr envPathLine,
    t_EnvironmentPtr environment
    ) {
-   t_PathLinesPtr finalPathLine = GetFinalPathLine( envPathLine );
+   t_PathLinesPtr pathLine = GetGpsPathLineFromEnvPathLine( envPathLine );
    DebugCode (
-      PrintEnvPathLines( finalPathLine );
+      PrintInEnvPathLines( pathLine );
       );
-   TurnEnv2GpsPathLine( finalPathLine, environment );
-   return finalPathLine;
+   TurnEnv2GpsPathLine( pathLine, environment );
+   return pathLine;
+}
+
+static int GetEnvXFromGpsPathMember(
+   t_PathPointPtr positionMember,
+   t_EnvironmentPtr environment
+   ) {
+   int lengthOfUnit = GetEnvLengthOfUnit( environment );
+   int topLeftLon = GetEnvTopLeftLon( environment );
+   int lonMember = GetGpsPathPointLon( positionMember );
+   int latMember = GetGpsPathPointLat( positionMember );
+   int disLon = CalGpsDistanceLon( lonMember, latMember, topLeftLon );
+   if ( lonMember < topLeftLon ) {
+      disLon = -1 *disLon;
+   }
+   return disLon / lengthOfUnit;
+}
+
+static int GetEnvYFromGpsPathMember(
+   t_PathPointPtr positionMember,
+   t_EnvironmentPtr environment
+   ) {
+   int heightOfUnit = GetEnvHeightOfUnit( environment );
+   int topLeftLat = GetEnvTopLeftLat( environment );
+   int lonMember = GetGpsPathPointLon( positionMember );
+   int latMember = GetGpsPathPointLat( positionMember );
+   int disLat = CalGpsDistanceLat( lonMember, latMember, topLeftLat );
+   if ( latMember > topLeftLat ) {	/* if y is > 0 it should < the topleft */
+      disLat = -1 *disLat;
+   }
+   return disLat / heightOfUnit;
+}
+
+static t_EnvPathLinePtr GetEnvPosFromGpsPos(
+   t_PathLinesPtr positions,
+   t_EnvironmentPtr environment
+   ) {
+   int length = GetGpsPathLinePointCount( positions );
+   t_PathPointPtr currentPositionMem = GetGpsPathLinePoints( positions );
+   t_EnvPathLinePtr envPathLine = NULL;
+
+   for ( int i = 0; i < length; i++ ) {
+      int x = GetEnvXFromGpsPathMember( currentPositionMem, environment );
+      int y = GetEnvYFromGpsPathMember( currentPositionMem, environment );
+      envPathLine = InsertNewEnvPathLine( x, y, envPathLine );
+      currentPositionMem = GetGpsPathPointNext( currentPositionMem );
+   }
+
+   return envPathLine;
 }
 
 static int AstarInlocal(
@@ -565,7 +678,8 @@ static t_EnvPathLinePtr PartialPathSearch(
    int xEnd,
    int yEnd,
    t_EnvPathLinePtr envPathLine,
-   t_EnvironmentPtr environment
+   t_EnvironmentPtr environment,
+   int *isSearchSuccess
    ) {
    ResetEnvironment( environment );
 
@@ -581,11 +695,14 @@ static t_EnvPathLinePtr PartialPathSearch(
          fflush( stdout );
          );
 
-      return NULL;
+      *isSearchSuccess = 0;
+      return envPathLine;
    }
+   *isSearchSuccess = 1;
    envPathLine = StoreEnvPathLine( xEnd, yEnd, envPathLine, environment );
    return envPathLine;
 }
+
 static int IsStartAndEndPointValid(
    int xStart,
    int yStart,
@@ -601,6 +718,41 @@ static int IsStartAndEndPointValid(
    } else {
       return 0;
    }
+}
+
+static t_PathLinesPtr GetFreePathLineThroughMultiPoints(
+   t_EnvPathLinePtr distributedPoints,
+   t_EnvironmentPtr environment
+   ) {
+   /* if no free points exist, then return false */
+   if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) {
+      return NULL;
+   }
+
+   /* Do the path plan search between every neighbouring distribute points */
+   t_EnvPathLinePtr member = distributedPoints;
+   int xPrev = GetEnvPathMemberX( member );
+   int yPrev = GetEnvPathMemberY( member );
+   t_EnvPathLinePtr envPathLine = NULL;
+   for ( member = GetEnvPathMemberPrev( member );
+         member != NULL;
+         member = GetEnvPathMemberPrev( member ) ) {
+      int isSearchSuccess;
+      envPathLine = PartialPathSearch( xPrev, yPrev,
+                                       GetEnvPathMemberX( member ), GetEnvPathMemberY( member ),
+                                       envPathLine, environment, &isSearchSuccess );
+      /* handle the situation of no way */
+      if ( isSearchSuccess == 0 ) {
+         FreePathLine( envPathLine );
+         return NULL;
+      }
+      xPrev = GetEnvPathMemberX( member );
+      yPrev = GetEnvPathMemberY( member );
+   }
+
+   t_PathLinesPtr pathLines = GetFinalGpsPathLine( envPathLine, environment );
+   FreePathLine( envPathLine );
+   return pathLines;
 }
 
 /* This routine first get the Distributed Free(not a obstacle) points between the start points and end points, then use the path plan search for the every neighbouring distributed points. This routine return the final path line if the scansearch is success, otherwise return NULL */
@@ -619,36 +771,25 @@ t_PathLinesPtr ScanSearch(
    t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart,
                                                              xEnd, yEnd,
                                                              width, environment );
-
-   /* if no free points exist, then return false */
-   if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) {
-      FreePathLine( distributedPoints );
-      return NULL;
-   }
-
-   /* Do the path plan search between every neighbouring distribute points */
-   t_EnvPathLinePtr member = distributedPoints;
-   int xPrev = GetEnvPathMemberX( member );
-   int yPrev = GetEnvPathMemberY( member );
-   t_EnvPathLinePtr envPathLine = NULL;
-   for ( member = GetEnvPathMemberPrev( member );
-         member != NULL;
-         member = GetEnvPathMemberPrev( member ) ) {
-       envPathLine = PartialPathSearch( xPrev, yPrev,
-                                        GetEnvPathMemberX( member ), GetEnvPathMemberY( member ),
-                                        envPathLine, environment );
-       /* handle the situation of no way */
-      if ( envPathLine == NULL ) {
-         FreePathLine( distributedPoints );
-         FreePathLine( envPathLine );
-         return NULL;
-      }
-      xPrev = GetEnvPathMemberX( member );
-      yPrev = GetEnvPathMemberY( member );
-   }
-
+   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
    FreePathLine( distributedPoints );
-   t_PathLinesPtr pathLines = GetGpsPathLine( envPathLine, environment );
-   FreePathLine( envPathLine );
-   return pathLines;
+   return finalPathLine;
+}
+
+t_PathLinesPtr MultiGpsPosPathPlan(
+   t_PathLinesPtr positions,
+   t_EnvironmentPtr environment
+   ) {
+   DebugCode(
+      PrintPosPathLines( positions );
+      fflush( stdout );
+      );
+   t_EnvPathLinePtr distributedPoints = GetEnvPosFromGpsPos( positions, environment );
+   DebugCode(
+      PrintEntirePathMembers( distributedPoints );
+      fflush( stdout );
+      );
+   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
+   FreePathLine( distributedPoints );
+   return finalPathLine;
 }

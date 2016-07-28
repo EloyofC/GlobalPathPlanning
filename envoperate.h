@@ -9,17 +9,17 @@ typedef struct t_Obstacles *t_ObstaclesPtr;
 
 t_EnvironmentMemberPtr CreateEnvMemberWithCost( int cost ); /* for the test function */
 void FreeEnvMember( t_EnvironmentMemberPtr member );        /* for test function */
-t_EnvironmentPtr InitialEnvWithGps( int lengthOfUnit, int widthOfUnit, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight );
+t_EnvironmentPtr InitialEnvWithGps( int lengthOfUnit, int heightOfUnit, int lonTopLeft, int latTopLeft, int lonBottomRight, int latBottomRight );
 void SetObstaclesInEnvironment( t_ObstaclesPtr obstacles, t_EnvironmentPtr newEnvironment );
 void PrintEnvironment( t_EnvironmentPtr environment );
 int GetEnvLength( t_EnvironmentPtr environment ); /* Get the length of the environment map */
-int GetEnvWidth( t_EnvironmentPtr environment ); /* Get the width of the environment map */
+int GetEnvHeight( t_EnvironmentPtr environment ); /* Get the height of the environment map */
 int GetEnvEndX( t_EnvironmentPtr environment );
 int GetEnvEndY( t_EnvironmentPtr environment );
 int GetEnvStartY( t_EnvironmentPtr environment );
 int GetEnvStartX( t_EnvironmentPtr environment );
 int GetEnvLengthOfUnit( t_EnvironmentPtr environment );
-int GetEnvWidthOfUnit( t_EnvironmentPtr environment );
+int GetEnvHeightOfUnit( t_EnvironmentPtr environment );
 t_EnvironmentMemberPtr GetEnvMemberPrev( t_EnvironmentMemberPtr member );
 int GetEnvTopLeftLon( t_EnvironmentPtr environment );
 int GetEnvTopLeftLat( t_EnvironmentPtr environment );
