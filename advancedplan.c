@@ -662,8 +662,14 @@ static t_EnvPathLinePtr GetEnvPosFromGpsPos(
    for ( int i = 0; i < length; i++ ) {
       int x = GetEnvXFromGpsPathMember( currentPositionMem, environment );
       int y = GetEnvYFromGpsPathMember( currentPositionMem, environment );
-      envPathLine = InsertNewEnvPathLine( x, y, envPathLine );
-      currentPositionMem = GetGpsPathPointNext( currentPositionMem );
+      if ( IsEnvPointInEnv( x, y, environment ) ) {
+         envPathLine = InsertNewEnvPathLine( x, y, envPathLine );
+         currentPositionMem = GetGpsPathPointNext( currentPositionMem );
+      } else {
+         /* if the gps pos is not in the rectangle place, then return False */
+         FreePathLine( envPathLine );
+         return NULL;
+      }
    }
 
    return envPathLine;
@@ -796,6 +802,10 @@ t_PathLinesPtr MultiGpsPosPathPlan(
       fflush( stdout );
       );
    t_EnvPathLinePtr passedPoints = GetEnvPosFromGpsPos( positions, environment );
+   /* If the giving gps pos is not valid then return flase */
+   if ( passedPoints == NULL ) {
+      return NULL;
+   }
    DebugCode(
       PrintEntirePathMembers( passedPoints );
       fflush( stdout );
