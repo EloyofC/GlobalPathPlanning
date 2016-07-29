@@ -250,14 +250,8 @@ static t_EnvPathLinePtr GetDistributedPoints(
    int yStart,
    int xEnd,
    int yEnd,
-   int width,
-   t_EnvironmentPtr environment
+   int width
    ) {
-   assert( IsEnvPointInEnv( xStart, yStart, environment ) &&
-           !IsEnvMemberObstacle( GetEnvMember( xStart, yStart, environment ) ) );
-   assert( IsEnvPointInEnv( xEnd, yEnd, environment ) &&
-           !IsEnvMemberObstacle( GetEnvMember( xStart, yStart, environment ) ) );
-
    int min_x = xStart < xEnd ? xStart : xEnd;
    int min_y = yStart < yEnd ? yStart : yEnd;
    int max_x = xStart + xEnd - min_x;
@@ -726,8 +720,7 @@ static int IsStartAndEndPointValid(
    ) {
    if ( IsEnvPointInEnv( xStart, yStart, environment ) &&
         !IsEnvMemberObstacle( GetEnvMember( xStart, yStart, environment ) ) &&
-        IsEnvPointInEnv( xEnd, yEnd, environment ) &&
-        !IsEnvMemberObstacle( GetEnvMember( xEnd, yEnd, environment ) ) ) {
+        IsEnvPointInEnv( xEnd, yEnd, environment ) ) {
       return 1;
    } else {
       return 0;
@@ -785,7 +778,7 @@ t_PathLinesPtr ScanSearch(
 
    t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart,
                                                              xEnd, yEnd,
-                                                             width, environment );
+                                                             width );
    t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
    FreePathLine( distributedPoints );
    return finalPathLine;

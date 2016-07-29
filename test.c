@@ -414,5 +414,5 @@ int main(
    int argc,
    char *argv[]
    ) {
-   return TestTwoObstaclePosWithMultiPos();
+   return TestTwoObstacleInRec();
 }
