@@ -303,8 +303,7 @@ static t_EnvironmentMemberPtr SearchNearestFreePoint(
    int yIndex,
    t_EnvironmentPtr environment
    ) {
-   if ( environment == NULL )
-      return NULL;
+   assert( environment != NULL );
 
    ResetEnvAllNotSearched( environment );
    t_FifoQueuePtr nearQueue =  CreateFifoQueue();

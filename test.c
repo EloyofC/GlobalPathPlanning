@@ -215,8 +215,8 @@ static int TestNoObstacleInRec(
    ) {
    int lonTopLeft = 1225604106;
    int latTopLeft = 308890180;
-   int lonBottomRight =  1227319960;
-   int latBottomRight =  307873053;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
    int width = 2000;
    t_ObstaclesPtr obstacles = NULL;
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
@@ -245,8 +245,8 @@ static int TestNoObstaclePosWithMultiPos(
    ) {
    int lonTopLeft = 1225604106;
    int latTopLeft = 308890180;
-   int lonBottomRight =  1227319960;
-   int latBottomRight =  307873053;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
    t_ObstaclesPtr obstacles = NULL;
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
    return TestTemplateWithMultiPos( positions, lonTopLeft, latTopLeft,
@@ -343,8 +343,8 @@ static int TestTwoObstacleInRec(
    ) {
    int lonTopLeft = 1225604106;
    int latTopLeft = 308890180;
-   int lonBottomRight =  1227319960;
-   int latBottomRight =  307873053;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
    int width = 500;
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
@@ -357,8 +357,8 @@ static int TestTwoObstaclePosWithMultiPos(
    ) {
    int lonTopLeft = 1225604106;
    int latTopLeft = 308890180;
-   int lonBottomRight =  1227319960;
-   int latBottomRight =  307873053;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
                                                        lonBottomRight, latBottomRight );
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
@@ -401,8 +401,8 @@ static int TestFullObstaclePosWithMultiPos(
    ) {
    int lonTopLeft = 1225604106;
    int latTopLeft = 308890180;
-   int lonBottomRight =  1227319960;
-   int latBottomRight =  307873053;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
    t_ObstaclesPtr obstacles = GetFullObstacleInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
