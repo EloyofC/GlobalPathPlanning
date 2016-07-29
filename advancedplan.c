@@ -132,7 +132,7 @@ static int DepthFirstPriority(
    return xHeuristic + yHeuristic;
 }
 
-/* can add some restraint of keep the same direction with the previous and stay at the same y( or may be the line of start and the end ) */
+/* Todo : can add some restraint of keep the same direction with the previous and stay at the same y( or may be the line of start and the end ) */
 static int AStarPriority(
    int costNew,
    t_EnvironmentMemberPtr member,
@@ -432,6 +432,12 @@ void PrintGpsPathLines(
    }
 }
 
+static void PrintInEnvPathLines(
+   t_PathLinesPtr pathLine
+   ) {
+   PrintGpsPathLines( pathLine, "The env pass point");
+}
+
 static void PrintPosPathLines(
    t_PathLinesPtr pathLine
    ) {
@@ -489,8 +495,10 @@ static t_PathLinesPtr GetGpsPathLineFromEnvPathLine(
          currentEnvPathLine =  SkipPathLineMember( currentEnvPathLine ) ) {
       int x = GetEnvPathMemberX( currentEnvPathLine );
       int y = GetEnvPathMemberY( currentEnvPathLine );
-      printf( "GetGpsPathLineFromEnvPathLine : x %d y %d\n", x, y);
-      fflush( stdout );
+      DebugCodeDetail(
+         printf( "GetGpsPathLineFromEnvPathLine : x %d y %d\n", x, y);
+         fflush( stdout );
+         );
       InsertNewGpsPathPoint( x, y, pathLine );
       currentEnvPathLine = FilterInALinePathLineMembers( currentEnvPathLine );
    }
@@ -606,7 +614,7 @@ static t_PathLinesPtr GetFinalGpsPathLine(
    t_EnvironmentPtr environment
    ) {
    t_PathLinesPtr pathLine = GetGpsPathLineFromEnvPathLine( envPathLine );
-   DebugCode (
+   DebugCode(
       PrintInEnvPathLines( pathLine );
       );
    TurnEnv2GpsPathLine( pathLine, environment );
@@ -703,6 +711,7 @@ static t_EnvPathLinePtr PartialPathSearch(
    return envPathLine;
 }
 
+/* This routine determines whether the start and end point is valid ( it's cor is in the environment and the corresponding point is not a obstacle ) */
 static int IsStartAndEndPointValid(
    int xStart,
    int yStart,
@@ -720,6 +729,7 @@ static int IsStartAndEndPointValid(
    }
 }
 
+/* This routine returns the path line which go through the free points which near the request points most. */
 static t_PathLinesPtr GetFreePathLineThroughMultiPoints(
    t_EnvPathLinePtr distributedPoints,
    t_EnvironmentPtr environment
@@ -755,7 +765,7 @@ static t_PathLinesPtr GetFreePathLineThroughMultiPoints(
    return pathLines;
 }
 
-/* This routine first get the Distributed Free(not a obstacle) points between the start points and end points, then use the path plan search for the every neighbouring distributed points. This routine return the final path line if the scansearch is success, otherwise return NULL */
+/* This routine first get the Distributed Free(not a obstacle) points between the start points and end points, then pathplanning to get the free( no collision with the obstacle ) path line which through the points or some points near it. This routine return the final path line if the scansearch is success, otherwise return NULL */
 t_PathLinesPtr ScanSearch(
    int xStart,
    int yStart,
@@ -776,6 +786,7 @@ t_PathLinesPtr ScanSearch(
    return finalPathLine;
 }
 
+/* This routine return the path line which go through the request gps of the positions, or the points near the positions. It returns the final path line if success, otherwise return NULL */
 t_PathLinesPtr MultiGpsPosPathPlan(
    t_PathLinesPtr positions,
    t_EnvironmentPtr environment
@@ -784,12 +795,12 @@ t_PathLinesPtr MultiGpsPosPathPlan(
       PrintPosPathLines( positions );
       fflush( stdout );
       );
-   t_EnvPathLinePtr distributedPoints = GetEnvPosFromGpsPos( positions, environment );
+   t_EnvPathLinePtr passedPoints = GetEnvPosFromGpsPos( positions, environment );
    DebugCode(
-      PrintEntirePathMembers( distributedPoints );
+      PrintEntirePathMembers( passedPoints );
       fflush( stdout );
       );
-   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
-   FreePathLine( distributedPoints );
+   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( passedPoints, environment );
+   FreePathLine( passedPoints );
    return finalPathLine;
 }

@@ -51,7 +51,7 @@ confirm :
 
 .PHONY : regresstest
 regresstest :
-	./regtest.sh
+	-./regtest.sh
 
 .PHONY : showenv
 showenv :

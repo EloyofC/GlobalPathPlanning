@@ -151,12 +151,6 @@ void FreeFinalPathLines(
    Free( finalPathLines );
 }
 
-void PrintInEnvPathLines(
-   t_PathLinesPtr pathLine
-   ) {
-   PrintGpsPathLines( pathLine, "The env pass point");
-}
-
 void PrintFinalGpsPathLines(
    t_PathLinesPtr pathLine
    ) {

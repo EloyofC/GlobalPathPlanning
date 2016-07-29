@@ -156,6 +156,10 @@ static int TestTemplateInRec(
    int isHorizon,
    t_ObstaclesPtr obstacles
    ) {
+   DebugCode(
+      printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
+      printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
+      );
    struct t_RectangleArea rectangle = SetInRectangle( lonTopLeft, latTopLeft,
                                                       lonBottomRight, latBottomRight );
    struct t_ScanWidthInfo widthInfo = SetInWidthInfo( width, isHorizon );
@@ -164,7 +168,9 @@ static int TestTemplateInRec(
                                                  rectangle, widthInfo, obstacles );
    FreeObstacles( obstacles );
    if ( pathLines != NULL ) {
-      PrintFinalGpsPathLines( pathLines );
+      DebugCode(
+         PrintFinalGpsPathLines( pathLines );
+         );
       FreeFinalPathLines( pathLines );
       printf( "Success\n" );
    } else {
@@ -182,13 +188,19 @@ static int TestTemplateWithMultiPos(
    int latBottomRight,
    t_ObstaclesPtr obstacles
    ) {
+   DebugCode(
+      printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
+      printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
+      );
    struct t_RectangleArea rectangle = SetInRectangle( lonTopLeft, latTopLeft,
                                                       lonBottomRight, latBottomRight );
    t_PathLinesPtr pathLines = GetPointsWithFixedMultiPosition( positions, rectangle, obstacles );
    FreeObstacles( obstacles );
    FreeFinalPathLines( positions );
    if ( pathLines != NULL ) {
-      PrintFinalGpsPathLines( pathLines );
+      DebugCode(
+         PrintFinalGpsPathLines( pathLines );
+         );
       FreeFinalPathLines( pathLines );
       printf( "Success\n" );
    } else {
@@ -206,8 +218,6 @@ static int TestNoObstacleInRec(
    int lonBottomRight =  1227319960;
    int latBottomRight =  307873053;
    int width = 2000;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = NULL;
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
                         latBottomRight, width, c_IsHorizon, obstacles );
@@ -237,8 +247,6 @@ static int TestNoObstaclePosWithMultiPos(
    int latTopLeft = 308890180;
    int lonBottomRight =  1227319960;
    int latBottomRight =  307873053;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = NULL;
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
    return TestTemplateWithMultiPos( positions, lonTopLeft, latTopLeft,
@@ -277,8 +285,6 @@ static int TestSingleObstacleInRec(
    int lonBottomRight = 1227319960;
    int latBottomRight = 307873053;
    int width = 500;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetSingleObstacleInArea( lonTopLeft, latTopLeft,
                                                        lonBottomRight, latBottomRight );
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
@@ -292,8 +298,6 @@ static int TestSingleObstaclePosWithMultiPos(
    int latTopLeft = 308890180;
    int lonBottomRight = 1227319960;
    int latBottomRight = 307873053;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetSingleObstacleInArea( lonTopLeft, latTopLeft,
                                                        lonBottomRight, latBottomRight );
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
@@ -342,8 +346,6 @@ static int TestTwoObstacleInRec(
    int lonBottomRight =  1227319960;
    int latBottomRight =  307873053;
    int width = 500;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
@@ -357,8 +359,6 @@ static int TestTwoObstaclePosWithMultiPos(
    int latTopLeft = 308890180;
    int lonBottomRight =  1227319960;
    int latBottomRight =  307873053;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
                                                        lonBottomRight, latBottomRight );
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
@@ -378,7 +378,7 @@ static t_ObstaclesPtr GetFullObstacleInArea(
    t_ObstaclesPtr obstacles = CreateObstacles();
    SetObstaclesCount( 1, obstacles );
    obstacles->m_obstacleMembersPtr = CreateSingleObstacleArray( 1 );
-   InsertSingleObstacle( sizeof( obs1X )/sizeof( int ), obs1X, obs1Y,GetSingleObstacle( 0, obstacles ));
+   InsertSingleObstacle( sizeof( obs1X )/sizeof( int ), obs1X, obs1Y,GetSingleObstacle( 0, obstacles ) );
    return obstacles;
 }
 
@@ -390,8 +390,6 @@ static int TestFullObstacleInRec(
    int lonBottomRight = 1227319960;
    int latBottomRight = 307873053;
    int width = 500;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetFullObstacleInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
@@ -405,8 +403,6 @@ static int TestFullObstaclePosWithMultiPos(
    int latTopLeft = 308890180;
    int lonBottomRight =  1227319960;
    int latBottomRight =  307873053;
-   printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
-   printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
    t_ObstaclesPtr obstacles = GetFullObstacleInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos();
@@ -418,5 +414,5 @@ int main(
    int argc,
    char *argv[]
    ) {
-   return TestFullObstaclePosWithMultiPos();
+   return TestTwoObstaclePosWithMultiPos();
 }

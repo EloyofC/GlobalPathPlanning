@@ -61,8 +61,7 @@ struct t_ExpectedCruiseCricle
 t_PathLinesPtr GetScanLinesInRec( int lonStart, int latStart, int lonEnd, int latEnd, struct t_RectangleArea rectangle, struct t_ScanWidthInfo widthInfo, t_ObstaclesPtr obstacles );
 t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle,  struct t_RectangleArea rectangle, t_ObstaclesPtr obstacles);
 t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, struct t_RectangleArea rectangle, t_ObstaclesPtr obstacles);
-void FreeFinalPathLines( t_PathLinesPtr finalPathLines );
-void PrintFinalGpsPathLines( t_PathLinesPtr finalPathLines );
-void PrintInEnvPathLines( t_PathLinesPtr finalPathLines );
+void FreeFinalPathLines( t_PathLinesPtr pathLine );
+void PrintFinalGpsPathLines( t_PathLinesPtr pathLine );
 
 #endif
