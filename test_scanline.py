@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+
+
 import unittest
 from scanline import *
+
 
 class TestEdge(unittest.TestCase):
     def test_edgemethod(self):
@@ -37,6 +41,7 @@ class TestEdgeTable(unittest.TestCase):
         self.my_edge_table.insert_edge(edge4)
         self.assertEqual(len(self.my_edge_table.get_yedges_table(2)), 2)
 
+
 class TestActiveEdgeTable(unittest.TestCase):
     def setUp(self):
         self.edge1 = Edge(-1, -3, 2, 3)
@@ -65,13 +70,16 @@ class TestActiveEdgeTable(unittest.TestCase):
         self.active_edge_table.get_new_edge(1)
         self.assertItemsEqual(self.active_edge_table.get_xofedges(), [1, 1, 1])
 
+
 def suite():
-    test_class_to_run = ['TestEdge', 'TestEdgeTable', 'TestActiveEdgeTable']
+    test_class_to_run = [
+        'TestEdge', 'TestEdgeTable', 'TestActiveEdgeTable'
+    ]
     loader = unittest.TestLoader()
     suite_list = []
     for test_class in test_class_to_run:
-        suite = loader.loadTestsFromTestCase(test_class)
-        suite_list.append(suite)
+        new_suite = loader.loadTestsFromTestCase(test_class)
+        suite_list.append(new_suite)
     return suite_list
 
 

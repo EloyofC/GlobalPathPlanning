@@ -522,5 +522,5 @@ int main(
    int argc,
    char *argv[]
    ) {
-   return TestTwoObstacleInRec();
+   return TestNoObstaclePosWithMultiPos2();
 }

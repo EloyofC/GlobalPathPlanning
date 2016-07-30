@@ -28,22 +28,22 @@ class Edge(object):
     """
     def __init__(self, x1, y1, x2, y2):
         assert(y1 != y2)
-        self.ymax = self.cal_ymax(y1, y2)
-        self.ymin = self.cal_ymin_positive(y1, y2)
-        self.xcurrent = self.cal_x_ypositivemin(x1, y1, x2, y2)           # it is a float number ,initial the x with the xmin and update the value in AET
-        self.ratio = self.cal_rev_ratio(x1, y1, x2, y2)
+        self._ymax = self.cal_ymax(y1, y2)
+        self._ymin = self.cal_ymin_positive(y1, y2)
+        self._xcurrent = self.cal_x_ypositivemin(x1, y1, x2, y2)           # it is a float number ,initial the x with the xmin and update the value in AET
+        self._ratio = self.cal_rev_ratio(x1, y1, x2, y2)
 
     def update_x(self):
-        self.xcurrent += self.ratio
+        self._xcurrent += self._ratio
 
     def get_ymax(self):
-        return self.ymax
+        return self._ymax
 
     def get_x(self):
-        return self.xcurrent
+        return self._xcurrent
 
     def get_ymin(self):
-        return self.ymin
+        return self._ymin
 
     @staticmethod
     def cal_rev_ratio(x1, y1, x2, y2):
@@ -103,17 +103,17 @@ class EdgeTable(object):
     1
     """
     def __init__(self, height):
-        self.height = height
-        self.table = [[] for i in range(height)]
+        self._height = height
+        self._table = [[] for i in range(height)]
 
     def insert_edge(self, edge):
-        self.table[edge.get_ymin()].append(edge)
+        self._table[edge.get_ymin()].append(edge)
 
     def get_table_height(self):
-        return self.height
+        return self._height
 
     def get_yedges_table(self, index):
-        return self.table[index]
+        return self._table[index]
 
 
 class ActiveEdgeTable(object):
@@ -122,21 +122,21 @@ class ActiveEdgeTable(object):
         The initial state of the active edge table should be empty until
         get_new_edge method is used with the argument of zero
         """
-        self.edge_table = edge_table
-        self.active_table = []
+        self._edge_table = edge_table
+        self._active_table = []
 
     def get_new_edge(self, ycurrent):
-        for i in self.edge_table.get_yedges_table(ycurrent):
-            self.active_table.append(i)
+        for i in self._edge_table.get_yedges_table(ycurrent):
+            self._active_table.append(i)
 
     def remove_died_edge(self, ycurrent):
-        self.active_table = [edge for edge in self.active_table if edge.get_ymax() != ycurrent]
+        self._active_table = [edge for edge in self._active_table if edge.get_ymax() != ycurrent]
 
     def get_xofedges(self):
-        return [edge.get_x() for edge in self.active_table]
+        return [edge.get_x() for edge in self._active_table]
 
     def update_allx(self):
-        for edge in self.active_table:
+        for edge in self._active_table:
             edge.update_x()
 
 
@@ -181,28 +181,28 @@ class EnvMap(object):
     """
 
     def __init__(self, length, height):
-        self.length = length
-        self.height = height
-        self.envmap = [[0 for i in range(length)] for j in range(height)]
+        self._length = length
+        self._height = height
+        self._envmap = [[0 for i in range(length)] for j in range(height)]
 
     def set_envmap_obstacle(self, length, height):
-        assert(length < self.length)
-        assert(height < self.height)
+        assert(length < self._length)
+        assert(height < self._height)
         print "set envmap obstacle length %d height %d" % (length, height)
-        self.envmap[height][length] = 1
+        self._envmap[height][length] = 1
 
     def get_envmap_byheight(self, height):
-        assert(0 <= height < self.height)
-        return self.envmap[height]
+        assert(0 <= height < self._height)
+        return self._envmap[height]
 
     def get_height(self):
-        return self.height
+        return self._height
 
     def get_length(self):
-        return self.length
+        return self._length
 
     def IsVertexInEnv(self, i, j):
-        return 0 <= i < self.length and 0 <= j < self.height
+        return 0 <= i < self._length and 0 <= j < self._height
 
     def fill_scanline(self, xlist, ycurrent):
         """

@@ -69,13 +69,13 @@ def main():
         file_name = sys.argv[1]
     else:
         file_name = 'test.log'
-        parameters = get_env_para(file_name)
-        env_size, obstacles = parameters
-        if env_size is not None:
-            path_points = get_env_path(file_name)
-            plot_env(env_size, obstacles, path_points)
-        else:
-            print "Debug Info is not right"
+    parameters = get_env_para(file_name)
+    env_size, obstacles = parameters
+    if env_size is not None:
+        path_points = get_env_path(file_name)
+        plot_env(env_size, obstacles, path_points)
+    else:
+        print "Debug Info is not right"
 
 
 if __name__ == '__main__':
