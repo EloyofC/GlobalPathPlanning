@@ -114,6 +114,9 @@ t_PathLinesPtr GetCruisePointsInCircle(
    t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
                                                               lonBottomRight,latBottomRight,
                                                               obstacles );
+   t_PathLinesPtr finalPathLine = CircleCruisePathPlan( circle, newEnvironment );
+   DeleteEnvironment( newEnvironment );
+   return finalPathLine;
 }
 
 t_PathLinesPtr GetPointsWithFixedMultiPosition(

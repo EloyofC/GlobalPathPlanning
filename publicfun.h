@@ -18,8 +18,11 @@
 #define DebugCodeDetail( code_fragement )
 #endif
 
+#define c_pi 3.1415926
+
 void *Malloc( size_t size );
 void Free( void *p );
+int IntSquare( int x );
 int CalGpsDistanceLon( int lonFirst, int latFirst, int lonSecond );
 int CalGpsDistanceLat( int lonFirst, int latFirst, int latSecond );
 double Angle2Radians( double angle );

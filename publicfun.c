@@ -11,7 +11,6 @@
 #include "publicfun.h"
 
 #define c_earthRadius 6371004.0
-#define c_pi 3.1415926
 #define c_doubleEqualEpsilon 0.001
 
 /* This routine is a wrap function of malloc, with the handling of out of space error by
@@ -32,6 +31,12 @@ void Free(
    void *p
    ) {
   free(p);
+}
+
+int IntSquare(
+   int x
+   ) {
+   return pow( x, 2 );
 }
 
 static double SevenPowersLargerAngle2Radians(
@@ -62,7 +67,6 @@ static int CalGpsDistance(
    double D = c_earthRadius * acos( C );
    return ( int ) D;
 }
-
 
 int CalGpsDistanceLon(
    int lonFirst,                /* the lon and lat is larger than normal lon by 10^7 */

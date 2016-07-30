@@ -14,6 +14,7 @@ struct t_PathLines;
 typedef struct t_PathLines *t_PathLinesPtr;
 struct t_PathPoint;
 typedef struct t_PathPoint *t_PathPointPtr;
+struct t_ExpectedCruiseCricle;
 
 int GetGpsPathPointLon( t_PathPointPtr pathPoint );
 int GetGpsPathPointLat( t_PathPointPtr pathPoint );
@@ -26,5 +27,6 @@ void PrintGpsPathLines( t_PathLinesPtr pathLine, char *str );
 void PrintAndFreePathLine( void );
 t_PathLinesPtr ScanSearch( int xStart, int yStart, int xEnd, int yEnd, int width, t_EnvironmentPtr m_environment );
 t_PathLinesPtr MultiGpsPosPathPlan( t_PathLinesPtr positions, t_EnvironmentPtr environment );
+t_PathLinesPtr CircleCruisePathPlan( struct t_ExpectedCruiseCricle circle, t_EnvironmentPtr environment );
 
 #endif

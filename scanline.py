@@ -3,6 +3,7 @@
 
 import matplotlib.pyplot as plt
 
+
 class Edge(object):
     """ This object is to create the attribute for the edge table
     Caution: The y1 can not be equal with y2
@@ -25,85 +26,56 @@ class Edge(object):
     >>> Edge.cal_ymin_positive(2, -9)
     0
     """
-    def __init__(
-            self,
-            x1,
-            y1,
-            x2,
-            y2
-    ):
+    def __init__(self, x1, y1, x2, y2):
         assert(y1 != y2)
         self.ymax = self.cal_ymax(y1, y2)
         self.ymin = self.cal_ymin_positive(y1, y2)
-        self.x = self.cal_x_ypositivemin(x1, y1, x2, y2)           # it is a float number ,initial the x with the xmin and update the value in AET
+        self.xcurrent = self.cal_x_ypositivemin(x1, y1, x2, y2)           # it is a float number ,initial the x with the xmin and update the value in AET
         self.ratio = self.cal_rev_ratio(x1, y1, x2, y2)
 
-    def update_x(
-            self
-    ):
-        self.x += self.ratio
+    def update_x(self):
+        self.xcurrent += self.ratio
 
-    def get_ymax(
-            self
-    ):
+    def get_ymax(self):
         return self.ymax
 
-    def get_x(
-            self
-    ):
-        return self.x
+    def get_x(self):
+        return self.xcurrent
 
-    def get_ymin(
-            self
-    ):
+    def get_ymin(self):
         return self.ymin
 
     @staticmethod
-    def cal_rev_ratio(
-            x1,
-            y1,
-            x2,
-            y2
-    ):
+    def cal_rev_ratio(x1, y1, x2, y2):
         if y1 < y2:
-            return 1.0 * (x2 - x1)/(y2 - y1)
+            return 1.0 * (x2-x1) / (y2-y1)
         else:
-            return 1.0 * (x1 - x2)/(y1 - y2)
+            return 1.0 * (x1-x2) / (y1-y2)
 
     @staticmethod
-    def cal_x_ypositivemin(
-            x1,
-            y1,
-            x2,
-            y2
-    ):
+    def cal_x_ypositivemin(x1, y1, x2, y2):
         """
         This function return the x cor with the ymin
         and if y < 0 it will be left to zero
         """
         if y1 < 0 or y2 < 0:
-            x = -1.0 * (x2 - x1)/(y2 - y1) * y2 + x2
-            return x
+            xshift = -1.0 * (x2-x1) / (y2-y1) * y2
+            xcal = x2 + xshift
+            return xcal
         elif y1 < y2:
             return x1 * 1.0
         else:
             return x2 * 1.0
 
     @staticmethod
-    def cal_ymax(
-            y1,
-            y2
-    ):
+    def cal_ymax(y1, y2):
         if y1 < y2:
             return y2
         else:
             return y1
 
     @staticmethod
-    def cal_ymin_positive(
-            y1,
-            y2
-    ):
+    def cal_ymin_positive(y1, y2):
         if y1 < y2:
             if y1 < 0:
                 return 0
@@ -114,6 +86,7 @@ class Edge(object):
                 return 0
             else:
                 return y2
+
 
 class EdgeTable(object):
     """
@@ -129,9 +102,7 @@ class EdgeTable(object):
     >>> len(edge_table.get_yedges_table(0))
     1
     """
-    def __init__(
-            self, height
-    ):
+    def __init__(self, height):
         self.height = height
         self.table = [[] for i in range(height)]
 
@@ -144,10 +115,9 @@ class EdgeTable(object):
     def get_yedges_table(self, index):
         return self.table[index]
 
+
 class ActiveEdgeTable(object):
-    def __init__(
-            self, edge_table
-    ):
+    def __init__(self, edge_table):
         """
         The initial state of the active edge table should be empty until
         get_new_edge method is used with the argument of zero
@@ -165,16 +135,12 @@ class ActiveEdgeTable(object):
     def get_xofedges(self):
         return [edge.get_x() for edge in self.active_table]
 
-    def update_allx(
-            self
-    ):
+    def update_allx(self):
         for edge in self.active_table:
             edge.update_x()
 
 
-def isvalid_edge(
-        y1, y2, height
-):
+def isvalid_edge(y1, y2, height):
     """ check whether the edge is a horizontal line or the egde is all
     below the zero line or above the top line
     >>> isvalid_edge(1, 2, 5)
@@ -190,7 +156,9 @@ def isvalid_edge(
     >>> isvalid_edge(8, 19, 5)
     False
     """
-    if ((y1 == y2) or (y1 < 0 and y2 < 0) or (y1 >= height and y2 >= height)):
+    if ((y1 == y2) or
+        (y1 < 0 and y2 < 0) or
+        (y1 >= height and y2 >= height)):
         return False
     else:
         return True
@@ -212,59 +180,36 @@ class EnvMap(object):
     [0, 1, 1, 0, 0, 1, 1, 0, 0]
     """
 
-    def __init__(
-            self,
-            length,
-            height
-    ):
+    def __init__(self, length, height):
         self.length = length
         self.height = height
         self.envmap = [[0 for i in range(length)] for j in range(height)]
 
-    def set_envmap_obstacle(
-            self,
-            length,
-            height
-    ):
+    def set_envmap_obstacle(self, length, height):
         assert(length < self.length)
         assert(height < self.height)
         print "set envmap obstacle length %d height %d" % (length, height)
         self.envmap[height][length] = 1
 
-    def get_envmap_byheight(
-            self,
-            height
-    ):
+    def get_envmap_byheight(self, height):
         assert(0 <= height < self.height)
         return self.envmap[height]
 
-    def get_height(
-            self
-    ):
+    def get_height(self):
         return self.height
 
-    def get_length(
-            self
-    ):
+    def get_length(self):
         return self.length
 
-    def IsVertexInEnv(
-            self,
-            i,
-            j
-    ):
+    def IsVertexInEnv(self, i, j):
         return 0 <= i < self.length and 0 <= j < self.height
 
-    def fill_scanline(
-            self,
-            xlist,
-            ycurrent
-    ):
+    def fill_scanline(self, xlist, ycurrent):
         """
         the fill rule is include the left point and ignore the right
         the precondition is already exclude the horizontal line
         """
-        if xlist == None or len(xlist) < 2:
+        if xlist is None or len(xlist) < 2:
             return
         xsorted = list(xlist)
         xsorted.sort()
@@ -272,18 +217,14 @@ class EnvMap(object):
         xpairs = []
         for i in range(len(xsorted) - 1):
             if i % 2 == 0:
-                xpairs.append(xsorted[i: i+2])
+                xpairs.append(xsorted[i : i+2])
         for xpair in xpairs:
             for i in range(xpair[0], xpair[1]):
                 if self.IsVertexInEnv(i, ycurrent):
                     self.set_envmap_obstacle(i, ycurrent)
 
-def plot_env(
-        envmap,
-        row = 1,
-        col = 1,
-        index = 1
-):
+
+def plot_env(envmap, row=1, col=1, index=1):
     env_scatter = plt.subplot(row, col, index)
     env_scatter.set_title("Obstacles In Environment")
     length = envmap.get_length()
@@ -303,53 +244,37 @@ def plot_env(
     env_scatter.scatter(obsx, obsy, c = 'red')
     plt.show()
 
-def get_envedges(
-        height,
-        edges
-):
+
+def get_envedges(height, edges):
     """
     >>> get_envedges(100, ([10, 10], [20, 10], [20, 20], [10, 20]))
     [[20, 10, 20, 20], [10, 20, 10, 10]]
     """
-    if edges == None or len(edges) < 2:
+    if edges is None or len(edges) < 2:
         return []
     envedge = []
     prev_vetex = None
     modified_edges = list(edges)
     modified_edges.append(modified_edges[0])
     for i in modified_edges:
-        if prev_vetex != None and isvalid_edge(prev_vetex[1], i[1], height):
+        if prev_vetex is not None and isvalid_edge(prev_vetex[1], i[1], height):
             envedge.append(prev_vetex + i)
         prev_vetex = i
     return envedge
 
-def draw_envmap(
-        length,
-        height,
-        obstacles,
-        row_plot = 1,
-        col_plot = 1,
-        index_plot = 1
-):
+
+def draw_envmap(length, height, obstacles, row_plot=1, col_plot=1, index_plot=1):
     envmap = EnvMap(length, height)
     set_obstacles_env(length, height, obstacles, envmap)
     plot_env(envmap, row_plot, col_plot, index_plot)
 
-def set_obstacles_env(
-        length,
-        height,
-        obstacles,
-        envmap
-):
+
+def set_obstacles_env(length, height, obstacles, envmap):
     for obstacle in obstacles:
         set_singleobstacle_env(length, height, obstacle, envmap)
 
-def set_singleobstacle_env(
-        length,
-        height,
-        single_obstacle,
-        envmap
-):
+
+def set_singleobstacle_env(length, height, single_obstacle, envmap):
     env_edges = get_envedges(height, single_obstacle)
     env_edge_table = EdgeTable(height)
     for i in env_edges:
@@ -363,19 +288,29 @@ def set_singleobstacle_env(
         envmap.fill_scanline(xlist, i)
         active_edge_table.update_allx()
 
+
 def main():
     import doctest
     doctest.testmod()
     length1 = 50
     height1 = 50
-    edges1 = [[40, 20], [40, -20], [60, -20], [60, 20]]
-    edges2 = [[-5, 30], [-3, 8], [8, -3], [15, 10]]
-    edges3 = [[30, 30], [30, 90], [90, 90], [90, 30]]
-    edges = [edges1, edges2, edges3]
+    edges1 = [
+        [40, 20], [40, -20], [60, -20], [60, 20]
+    ]
+    edges2 = [
+        [-5, 30], [-3, 8], [8, -3], [15, 10]
+    ]
+    edges3 = [
+        [30, 30], [30, 90], [90, 90], [90, 30]
+    ]
+    edges = [
+        edges1, edges2, edges3
+    ]
     obstacles2 = []
     for i in edges:
         obstacles2.append(i)
     draw_envmap(length1, height1, obstacles2)
+
 
 if __name__ == '__main__':
     main()

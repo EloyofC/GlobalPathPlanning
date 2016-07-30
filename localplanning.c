@@ -156,8 +156,12 @@ static t_PriorityQueuePtr SearchNeighbour(
    t_EnvironmentPtr environment,
    t_PriorityQueuePtr queue
    ) {
-   int x[ 4 ] = { -1, 1, 0, 0 };	/* search in four directions */
-   int y[ 4 ] = { 0, 0, -1, 1 };
+   int x[ ] = {
+      -1, 1, 0, 0
+   };	/* search in four directions */
+   int y[ ] = {
+      0, 0, -1, 1
+   };
    int xCurrent = GetEnvMemberX( member );
    int yCurrent = GetEnvMemberY( member );
    int count = sizeof( x )/sizeof( int );

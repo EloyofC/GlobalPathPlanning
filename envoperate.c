@@ -489,3 +489,33 @@ t_EnvironmentMemberPtr CreateEnvMemberWithCost(
    member->m_prevPtr = NULL;
    return member;
 }
+
+
+int GetEnvXFromGpsLon(
+   int lon,
+   t_EnvironmentPtr environment
+   ) {
+   int topLeftLon = GetEnvTopLeftLon( environment );
+   int topLeftLat = GetEnvTopLeftLat( environment );
+   int lengthOfUnit = GetEnvLengthOfUnit( environment );
+   int disLon = CalGpsDistanceLon( topLeftLon, topLeftLat, lon );
+   if ( lon < topLeftLon ) {
+      disLon = -1 * disLon;
+   }
+   return disLon / lengthOfUnit;
+}
+
+
+int GetEnvYFromGpsLat(
+   int lat,
+   t_EnvironmentPtr environment
+   ) {
+   int topLeftLon = GetEnvTopLeftLon( environment );
+   int topLeftLat = GetEnvTopLeftLat( environment );
+   int heightOfUnit = GetEnvHeightOfUnit( environment );
+   int disLat = CalGpsDistanceLat( topLeftLon, topLeftLat, lat );
+   if ( lat > topLeftLat ) {
+      disLat = -1 * disLat;
+   }
+   return disLat / heightOfUnit;
+}

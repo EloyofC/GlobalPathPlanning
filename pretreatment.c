@@ -125,30 +125,16 @@ static int CalGpsPointXInEnv(
    t_PointCorPtr obstaclePoint,
    t_EnvironmentPtr environment
    ) {
-   int lengthOfUnit = GetEnvLengthOfUnit( environment );
    int lonPoint = GetPointCorLon( obstaclePoint );
-   int latPoint = GetPointCorLat( obstaclePoint );
-   int topLeftLon = GetEnvTopLeftLon( environment );
-   int disLon = CalGpsDistanceLon( lonPoint, latPoint, topLeftLon );
-   if ( lonPoint < topLeftLon ) {
-      disLon = -1 *disLon;
-   }
-   return disLon / lengthOfUnit;
+   return GetEnvXFromGpsLon( lonPoint, environment );
 }
 
 static int CalGpsPointYInEnv(
    t_PointCorPtr obstaclePoint,
    t_EnvironmentPtr environment
    ) {
-   int heightOfUnit = GetEnvHeightOfUnit( environment );
-   int lonPoint = GetPointCorLon( obstaclePoint );
    int latPoint = GetPointCorLat( obstaclePoint );
-   int topLeftLat =  GetEnvTopLeftLat( environment );
-   int disLat = CalGpsDistanceLat( lonPoint, latPoint, topLeftLat );
-   if ( latPoint > topLeftLat ) {	/* if y is > 0 it should < the topleft */
-      disLat = -1 *disLat;
-   }
-   return disLat / heightOfUnit;
+   return GetEnvYFromGpsLat( latPoint, environment );
 }
 
 static int GetAdaptPointX(

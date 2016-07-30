@@ -30,6 +30,8 @@ int GetEnvMemberX( t_EnvironmentMemberPtr member );
 int GetEnvMemberY( t_EnvironmentMemberPtr member );
 int GetEnvMemberCost( t_EnvironmentMemberPtr member );
 int GetEnvMemberPriority( t_EnvironmentMemberPtr member );
+int GetEnvYFromGpsLat( int lat, t_EnvironmentPtr environment );
+int GetEnvXFromGpsLon( int lon, t_EnvironmentPtr environment );
 void DeleteEnvironment( t_EnvironmentPtr environment );
 void SetEnvStartX( int xStart, t_EnvironmentPtr environment );
 void SetEnvStartY( int yStart, t_EnvironmentPtr environment );
