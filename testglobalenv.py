@@ -61,6 +61,7 @@ def plot_env(env_size, obstacles, path_points):
     pointx = [single_point[0] for single_point in path_points]
     pointy = [single_point[1] for single_point in path_points]
     env_scatter.scatter(pointx, pointy, c='blue')
+    plt.plot( pointx, pointy, '-og')
     plt.show()
 
 

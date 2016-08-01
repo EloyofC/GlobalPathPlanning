@@ -180,6 +180,50 @@ static int TestTemplateInRec(
    return 0;
 }
 
+struct t_ExpectedCruiseCricle SetInCircle(
+   int lonCircleCenter,
+   int latCircleCenter,
+   int radius
+   ) {
+   struct t_ExpectedCruiseCricle circle;
+   circle.m_lonCircleCenter = lonCircleCenter;
+   circle.m_latCircleCenter = latCircleCenter;
+   circle.m_circleRadius = radius;
+   return circle;
+}
+
+static int TestTemplateInCircle(
+   int lonTopLeft,
+   int latTopLeft,
+   int lonBottomRight,
+   int latBottomRight,
+   int lonCircleCenter,
+   int latCircleCenter,
+   int radius,
+   t_ObstaclesPtr obstacles
+   ) {
+   DebugCode(
+      printf( "The start point is x %d y %d\n", lonTopLeft, latTopLeft );
+      printf( "The end point is x %d y %d\n", lonBottomRight, latBottomRight );
+      );
+   struct t_RectangleArea rectangle = SetInRectangle( lonTopLeft, latTopLeft,
+                                                      lonBottomRight, latBottomRight );
+   struct t_ExpectedCruiseCricle circle = SetInCircle( lonCircleCenter, latCircleCenter, radius );
+   t_PathLinesPtr pathLines = GetCruisePointsInCircle( circle, rectangle, obstacles );
+   FreeObstacles( obstacles );
+   if ( pathLines != NULL ) {
+      DebugCode(
+         PrintFinalGpsPathLines( pathLines );
+         );
+      FreeFinalPathLines( pathLines );
+      printf( "Success\n" );
+   } else {
+      printf( "Sad\n" );
+   }
+   fflush( stdout );
+   return 0;
+}
+
 static int TestTemplateWithMultiPos(
    t_PathLinesPtr positions,
    int lonTopLeft,
@@ -223,6 +267,21 @@ static int TestNoObstacleInRec(
                              latBottomRight, width, c_IsHorizon, obstacles );
 }
 
+static int TestNoObstacleInCircle(
+   void
+   ) {
+   int lonTopLeft = 1223663634;
+   int latTopLeft = 307800522;
+   int lonBottomRight = 1225596908;
+   int latBottomRight = 306138146;
+   int lonCircleCenter = 1224631520;
+   int latCircleCenter = 306969334;
+   int radius = 6530;
+   t_ObstaclesPtr obstacles = NULL;
+   return TestTemplateInCircle( lonTopLeft, latTopLeft, lonBottomRight, latBottomRight,
+                                lonCircleCenter, latCircleCenter, radius, obstacles );
+}
+
 static t_PathLinesPtr GetNoObstaclePosWithMultiPos(
    void
    ) {
@@ -264,10 +323,10 @@ static t_PathLinesPtr GetNoObstaclePosWithMultiPos2(
    void
    ) {
    int position1X[] = {
-      1217936682, 1217124131, 1214439812, 1213931968
+      1199711915, 1198217402, 1198217402
    };
    int position1Y[] = {
-      379124505, 377513380, 377974053, 379802427
+      379537098, 379904655, 380547457
    };
    t_PathLinesPtr positions = CreateGpsPathLine();
    int length = sizeof( position1X )/sizeof( int );
@@ -277,13 +336,14 @@ static t_PathLinesPtr GetNoObstaclePosWithMultiPos2(
    return positions;
 }
 
+
 static int TestNoObstaclePosWithMultiPos2(
    void
    ) {
-   int lonTopLeft = 1213931968;
-   int latTopLeft = 379802427;
-   int lonBottomRight = 1217936682;
-   int latBottomRight = 377513380;
+   int lonTopLeft = 1198217402;
+   int latTopLeft = 380547457;
+   int lonBottomRight = 1199711915;
+   int latBottomRight = 379537098;
    t_ObstaclesPtr obstacles = NULL;
    t_PathLinesPtr positions = GetNoObstaclePosWithMultiPos2();
    return TestTemplateWithMultiPos( positions, lonTopLeft, latTopLeft,
@@ -456,6 +516,22 @@ static int TestTwoObstacleInRec(
                              latBottomRight, width, c_IsHorizon, obstacles );
 }
 
+static int TestTwoObstacleInCircle(
+   void
+   ) {
+   int lonTopLeft = 1225604106;
+   int latTopLeft = 308890180;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
+   int lonCircleCenter = 1226419960;
+   int latCircleCenter = 308388888;
+   int radius = 2800;
+   t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
+                                                     lonBottomRight, latBottomRight );
+   return TestTemplateInCircle( lonTopLeft, latTopLeft, lonBottomRight, latBottomRight,
+                                lonCircleCenter, latCircleCenter, radius, obstacles );
+}
+
 static int TestTwoObstaclePosWithMultiPos(
    void
    ) {
@@ -518,9 +594,24 @@ static int TestFullObstaclePosWithMultiPos(
                                     lonBottomRight, latBottomRight, obstacles );
 }
 
+static int TestFullObstacleInCircle(
+   void
+   ) {
+   int lonTopLeft = 1225604106;
+   int latTopLeft = 308890180;
+   int lonBottomRight = 1227319960;
+   int latBottomRight = 307873053;
+   int lonCircleCenter = 1226419960;
+   int latCircleCenter = 308388888;
+   int radius = 1000;
+   t_ObstaclesPtr obstacles = GetFullObstacleInArea( lonTopLeft, latTopLeft,
+                                                     lonBottomRight, latBottomRight );
+   return TestTemplateInCircle( lonTopLeft, latTopLeft, lonBottomRight, latBottomRight,
+                                lonCircleCenter, latCircleCenter, radius, obstacles );
+}
 int main(
    int argc,
    char *argv[]
    ) {
-   return TestNoObstaclePosWithMultiPos2();
+   return TestTwoObstacleInCircle();
 }

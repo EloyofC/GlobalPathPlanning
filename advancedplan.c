@@ -16,7 +16,7 @@
 #include "fifoqueue.h"
 #include "mission.h"
 
-#define c_angleDeltaPerRadians 5
+#define c_angleDeltaPerRadians 0.04
 
 typedef struct t_EnvPathLine
 {
@@ -75,12 +75,15 @@ static int IsDoubleNextEnvPathMemberExist(
       ( GetEnvPathMemberNext( envPathLineNext ) != NULL );
 }
 
-static t_EnvPathLinePtr SkipPathLineMember(
+static t_EnvPathLinePtr SkipNextEnvPathMember(
    t_EnvPathLinePtr envPathLine
    ) {
    assert( envPathLine != NULL );
    t_EnvPathLinePtr memberNext = GetEnvPathMemberNext( envPathLine );
-   return memberNext;
+   t_EnvPathLinePtr newEnvPathLine = envPathLine;
+   newEnvPathLine->m_next = GetEnvPathMemberNext( memberNext );
+   Free( memberNext );
+   return newEnvPathLine;
 }
 
 static int IsEnvPathMemberEmpty(
@@ -168,6 +171,7 @@ static t_EnvPathLinePtr CreateEnvPathLine(
    t_EnvPathLinePtr memberNew = Malloc( sizeof( struct t_EnvPathLine ) );
    memberNew->m_xIndex = x;
    memberNew->m_yIndex = y;
+   memberNew->m_next = NULL;
    return memberNew;
 }
 
@@ -362,6 +366,7 @@ static int ChangeDistributedWithNearestFreePoints(
    return 1;
 }
 
+/* This routine append the second pathline to the end of the first one */
 static t_EnvPathLinePtr AppendEnvPathLine(
    t_EnvPathLinePtr envPathLineFirst,
    t_EnvPathLinePtr envPathLineSecond
@@ -417,6 +422,8 @@ void InsertNewGpsPathPoint(
    int y,
    t_PathLinesPtr pathLine
    ) {
+   assert( pathLine != NULL );
+
    t_PathPointPtr pointNew = Malloc( sizeof( struct t_PathPoint ) );
    pointNew->m_lon = x;
    pointNew->m_lat = y;
@@ -479,6 +486,8 @@ static int IsThreePointInALine(
 static t_EnvPathLinePtr FilterInALinePathLineMembers(
    t_EnvPathLinePtr envPathLine
    ) {
+   assert( envPathLine != NULL );
+
    t_EnvPathLinePtr currentEnvPathLine = envPathLine;
    while ( IsDoubleNextEnvPathMemberExist( currentEnvPathLine ) ) {
       if ( IsThreePointInALine( GetEnvPathMemberX( currentEnvPathLine ),
@@ -487,7 +496,7 @@ static t_EnvPathLinePtr FilterInALinePathLineMembers(
                                 GetNextEnvPathMemberY( currentEnvPathLine ),
                                 GetDoubleNextEnvPathMemberX( currentEnvPathLine ),
                                 GetDoubleNextEnvPathMemberY( currentEnvPathLine ) ) ) {
-         currentEnvPathLine = SkipPathLineMember( currentEnvPathLine );
+         currentEnvPathLine = SkipNextEnvPathMember( currentEnvPathLine );
       }else {
          break;
       }
@@ -504,7 +513,7 @@ static t_PathLinesPtr GetGpsPathLineFromEnvPathLine(
       );
    for ( t_EnvPathLinePtr currentEnvPathLine = envPathLine;
          !IsEnvPathMemberEmpty( currentEnvPathLine );
-         currentEnvPathLine =  SkipPathLineMember( currentEnvPathLine ) ) {
+         currentEnvPathLine =  GetEnvPathMemberNext( currentEnvPathLine ) ) {
       int x = GetEnvPathMemberX( currentEnvPathLine );
       int y = GetEnvPathMemberY( currentEnvPathLine );
       DebugCodeDetail(
@@ -719,7 +728,10 @@ static int GetCircleCenterY(
    3. ( x - x0 )^2/a^2 + ( y - y0 )^2/b^2 = 1
    The solution is :
    x = a * b/sqrt( b^2 + a^2 * k^2 ) + x0
-   y = k( x - x0 ) + y0 */
+   y = k( x - x0 ) + y0
+   To be simplity: we declare that
+   the value of x and y is according to the quadrant
+*/
 static void GetPointCorInOval(
    double angleCurrent,
    int circleCenterX,
@@ -731,22 +743,45 @@ static void GetPointCorInOval(
    ) {
    double gradient = sin( angleCurrent );
    double denominator = sqrt( IntSquare( axisY ) + IntSquare( axisX * gradient ) );
-   double x = axisX * axisY / denominator + circleCenterX;
-   double y = ( x - circleCenterX ) * gradient + circleCenterY;
+   double deltaX = axisX * axisY / denominator;
+   double deltaY = deltaX * fabs( gradient );
+
+   double x, y;
+   if ( angleCurrent >= 0 &&
+        angleCurrent < c_pi/2 ) {
+      /* first quadrant */
+      x = circleCenterX + deltaX;
+      y = circleCenterY + deltaY;
+   } else if ( angleCurrent >= c_pi/2 &&
+               angleCurrent < c_pi ) {
+      /* second quadrant */
+      x = circleCenterX - deltaX;
+      y = circleCenterY + deltaY;
+   } else if ( angleCurrent >= -1 * c_pi /2 &&
+               angleCurrent < 0 ) {
+      /* fourth quadrant */
+      x = circleCenterX + deltaX;
+      y = circleCenterY - deltaY;
+   } else {
+      /* third quadrant */
+      x = circleCenterX - deltaX;
+      y = circleCenterY - deltaY;
+   }
    *pointX = x;
    *pointY = y;
 }
 
+/* close in left and open in right */
 static double Turn2NormalRadiansRange(
    double radians
    ) {
    double min = -1 * c_pi;
-   while ( ( radians <= min ) ) {
-      radians += c_pi;
+   while ( ( radians < min ) ) {
+      radians += 2 * c_pi;
    }
    double max = c_pi;
-   while (( radians > max ) ) {
-      radians -= c_pi;
+   while (( radians >= max ) ) {
+      radians -= 2 * c_pi;
    }
    return radians;
 }
@@ -762,20 +797,31 @@ static t_EnvPathLinePtr GetEnvOvalDistributedPoints(
    ) {
    int count = 2 * c_pi / radiansDelta;
    double radiansCurrent = Turn2NormalRadiansRange( radiansStart );
+   int firstX, firstY;
+   GetPointCorInOval( radiansCurrent, circleCenterX, circleCenterY,
+                      axisX, axisY, &firstX, &firstY );
    t_EnvPathLinePtr distributedPoints = NULL;
    for ( int i = 0; i < count; i++ ) {
+      printf( "GetEnvOvalDistributedPoints : radiansCurrent %f\n", radiansCurrent );
       int pointX, pointY;
       GetPointCorInOval( radiansCurrent,
                          circleCenterX, circleCenterY,
                          axisX, axisY,
                          &pointX, &pointY );
+      printf( "GetEnvOvalDistributedPoints : i %d nd x %d y %d \n", i, pointX, pointY );
+      fflush( stdout );
       if ( !IsEnvPointInEnv( pointX, pointY, environment ) ) {
+         DebugCode(
+            printf( "GetEnvOvalDistributedPoints : x %d y %d is not in env\n", pointX, pointY );
+            fflush( stdout );
+            )
          FreePathLine( distributedPoints );
          return NULL;
       }
       distributedPoints = InsertNewEnvPathLine( pointX, pointY, distributedPoints );
       radiansCurrent = Turn2NormalRadiansRange( radiansCurrent + radiansDelta );
    }
+   distributedPoints = InsertNewEnvPathLine( firstX, firstY, distributedPoints );
    return distributedPoints;
 }
 
@@ -787,7 +833,12 @@ static t_EnvPathLinePtr GetCircleDistributedPoints(
    ) {
    double axisX = ( double )circleRadius / GetEnvLengthOfUnit( environment );
    double axisY = ( double )circleRadius / GetEnvHeightOfUnit( environment );
-   double radiansDelta = circleRadius * c_angleDeltaPerRadians;
+   DebugCode(
+      printf( "GetCircleDistributedPoints : circle center x %d y %d\n",
+              circleCenterX, circleCenterY );
+      fflush( stdout );
+      )
+   double radiansDelta = c_angleDeltaPerRadians;
    double radiansStart = 0;     /* may be cal according to the start point */
    return GetEnvOvalDistributedPoints( radiansStart, radiansDelta,
                                        circleCenterX, circleCenterY,
@@ -936,6 +987,10 @@ t_PathLinesPtr CircleCruisePathPlan(
       return NULL;
    }
 
+   DebugCode(
+      PrintEntirePathMembers( distributedPoints );
+      fflush( stdout );
+      );
    t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
    FreePathLine( distributedPoints );
    return finalPathLine;

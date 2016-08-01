@@ -265,16 +265,16 @@ def get_envedges(height, edges):
 
 def draw_envmap(length, height, obstacles, row_plot=1, col_plot=1, index_plot=1):
     envmap = EnvMap(length, height)
-    set_obstacles_env(length, height, obstacles, envmap)
+    set_obstacles_env(height, obstacles, envmap)
     plot_env(envmap, row_plot, col_plot, index_plot)
 
 
-def set_obstacles_env(length, height, obstacles, envmap):
+def set_obstacles_env(height, obstacles, envmap):
     for obstacle in obstacles:
-        set_singleobstacle_env(length, height, obstacle, envmap)
+        set_singleobstacle_env(height, obstacle, envmap)
 
 
-def set_singleobstacle_env(length, height, single_obstacle, envmap):
+def set_singleobstacle_env(height, single_obstacle, envmap):
     env_edges = get_envedges(height, single_obstacle)
     env_edge_table = EdgeTable(height)
     for i in env_edges:
