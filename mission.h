@@ -41,13 +41,14 @@ struct t_RectangleArea {
 
 struct t_ScanWidthInfo {
    int m_width;
-   int m_isHorizon;             /* horizon with 1, vertical with 2 */
+   unsigned char m_isHorizon;             /* horizon with 1, vertical with 2 */
 };
 
 struct t_ExpectedCruiseCricle {
    int m_lonCircleCenter;            /* type of gps */
    int m_latCircleCenter;
    int m_circleRadius;
+   unsigned char m_isClockWise;
 };
 
 t_PathLinesPtr GetScanLinesInRec( int lonStart, int latStart, int lonEnd, int latEnd, struct t_RectangleArea rectangle, struct t_ScanWidthInfo widthInfo, t_ObstaclesPtr obstacles );

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "heapqueue.h"
 #include "publicfun.h"
-#include "pretreatment.h"
+#include "envoperate.h"
 
 
 #define c_priorityQueueSize 3
@@ -64,6 +64,10 @@ static t_PriorityQueuePtr MakeQueueBigger(
    t_PriorityQueuePtr queue
    ) {
    t_PriorityQueuePtr priorityQueueNew = CreatePriorityQueueWithSize( queue->m_size * 2 );
+   DebugCodeDetail(
+      printf( "MakeQueueBigger\n");
+      fflush( stdout );
+      )
    priorityQueueNew->m_index = queue->m_index;
    for ( int i = 0; i < queue->m_index; i++ ) {
       priorityQueueNew->m_elementsPtr[ i ] = queue->m_elementsPtr[ i ];

@@ -52,6 +52,13 @@ static t_PriorityQueuePtr UpdateMember2Queue(
    t_EnvironmentPtr environment,
    t_PriorityQueuePtr queue
    ) {
+   DebugCodeDetail(
+      if ( !IsEnvMemberUnvisited( memberInSearch ) ) {
+         printf( "UpdateMember2Queue : The member use decrease key x %d y %d\n",
+                 GetEnvMemberX( memberInSearch ), GetEnvMemberY( memberInSearch ) );
+         fflush( stdout );
+      }
+      );
    SetEnvMemberCost( costNew, memberInSearch );
    SetEnvMemberPriority( compute( costNew, memberInSearch, environment ), memberInSearch );
    SayFather( memberPrev, memberInSearch );
@@ -65,6 +72,11 @@ int ComparePriority(
    t_EnvironmentMemberPtr memberFirst,
    t_EnvironmentMemberPtr memberSecond
    ) {
+   /* if ( GetEnvMemberPriority( memberFirst ) == GetEnvMemberPriority( memberSecond ) ) { */
+   /*    return GetEnvMemberCost( memberFirst ) > GetEnvMemberCost( memberSecond ); */
+   /* } else { */
+   /*    return GetEnvMemberPriority( memberFirst ) > GetEnvMemberPriority( memberSecond ); */
+   /* } */
    return GetEnvMemberPriority( memberFirst ) > GetEnvMemberPriority( memberSecond );
 }
 
@@ -75,14 +87,13 @@ static t_EnvironmentMemberPtr GetEnvMemberInitial(
    t_EnvironmentPtr environment
    ) {
    t_EnvironmentMemberPtr memberFirst = GetEnvMember( xStart, yStart, environment );
-   SetEnvMemberDead( memberFirst );
 
    return memberFirst;
 }
 
 /* This routine get the next valid env member with the min cost, if couldn't find
    return NULL*/
-static t_EnvironmentMemberPtr GetEnvMemberNextMin(
+static t_EnvironmentMemberPtr GetEnvMemberNextExistMin(
    int ( * cmp )( t_PQElementTypePtr, t_PQElementTypePtr  ),
    t_PriorityQueuePtr queue
    ) {
@@ -92,10 +103,6 @@ static t_EnvironmentMemberPtr GetEnvMemberNextMin(
       memberNew = DeleteMinPriorityQueue( cmp, queue );
    }
 
-   /* if no way exist DeleteMin -> memberNew -> return is all NULL */
-   if ( memberNew != NULL ) {
-      SetEnvMemberDead( memberNew );
-   }
    return memberNew;
 }
 
@@ -116,6 +123,12 @@ static t_PriorityQueuePtr SearchANode(
 
    /* If the cost of the existing QueueMember is smaller than the previous, then update */
    if ( IsEnvMemberUpdateNewCost( costNew, memberInSearch ) ) {
+      DebugCodeDetail(
+         printf( "SearchANode : The node x %d y %d oldcost %d newcost %d\n",
+                 GetEnvMemberX( memberInSearch ), GetEnvMemberY( memberInSearch ),
+                 GetEnvMemberCost( memberInSearch ), costNew );
+         fflush( stdout );
+         )
       queue = UpdateMember2Queue( costNew, compute, cmp,
                                   memberPrev, memberInSearch, environment, queue );
    }
@@ -170,7 +183,6 @@ static t_PriorityQueuePtr SearchNeighbour(
       queue = SearchADirection( xCurrent + x[ i ], yCurrent + y[ i ],
                                 compute, cmp, member, environment, queue );
    }
-  
    return queue;
 }
 
@@ -198,15 +210,16 @@ int DoSomePathPlanning(
 
    /* Do the shortest path search until the search is finished or there is no way */
    for ( ; ( member != NULL ) && !IsSearchEnd( member, environment );
-         member = GetEnvMemberNextMin( cmp, planningQueue ) ) {
+         member = GetEnvMemberNextExistMin( cmp, planningQueue ) ) {
 
-      DebugCodeDetail (
-         printf( "DoSomePathPlanning : Searched Member x %d y %d \n",
-                 GetEnvMemberX( member ), GetEnvMemberY( member ) );
+      DebugCodeDetail(
+         printf( "DoSomePathPlanning : Searched Member x %d y %d unvisited %d\n",
+                 GetEnvMemberX( member ), GetEnvMemberY( member ), IsEnvMemberUnvisited( member ) );
          fflush( stdout );
          );
 
-      planningQueue = SearchNeighbour( compute, cmp, member, environment, planningQueue );
+         SetEnvMemberDead( member );
+         planningQueue = SearchNeighbour( compute, cmp, member, environment, planningQueue );
    }
 
    FreePriorityQueue( planningQueue );

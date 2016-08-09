@@ -57,10 +57,69 @@ static void test_IsThreePointsInALineTemplate(
 START_TEST( test_IsThreePointsInALine )
 {
   test_IsThreePointsInALineTemplate( 1, 2, 3, 4, 5, 6, 0 );
+  test_IsThreePointsInALineTemplate( 1, 3, 1, 5, 1, 9, 0 );
   test_IsThreePointsInALineTemplate( 1, 3, 1, 9, 1, 4, 0 );
+  test_IsThreePointsInALineTemplate( 1, 3, 1, 3, 1, 4, 0 );
+  test_IsThreePointsInALineTemplate( 1, 3, 1, 4, 2, 3, 1 );
+  test_IsThreePointsInALineTemplate( 1, 3, 1, 3, 2, 4, 0 );
   test_IsThreePointsInALineTemplate( 9, 7, 23, 7, 2, 7, 0 );
+  test_IsThreePointsInALineTemplate( 9, 9, 12, 12, 19, 19, 0 );
   test_IsThreePointsInALineTemplate( 4, 9, 8, 10, 9, 11, 1 );
   test_IsThreePointsInALineTemplate( 4, 9, 8, 10, 12, 7, 1 );
+}
+END_TEST
+
+static void test_IsThreePointsInADirectionTemplate(
+   int x1,
+   int y1,
+   int x2,
+   int y2,
+   int x3,
+   int y3,
+   int IsFalse
+   ) {
+  ck_assert_int_eq( IsThreePointInADirection( x1, y1, x2, y2, x3, y3 ),
+                    !IsFalse );
+}
+
+START_TEST( test_IsThreePointsInADirection )
+{
+  test_IsThreePointsInADirectionTemplate( 1, 2, 3, 4, 5, 6, 0 );
+  test_IsThreePointsInADirectionTemplate( 1, 3, 1, 5, 1, 9, 0 );
+  test_IsThreePointsInADirectionTemplate( 1, 3, 1, 9, 1, 4, 1 );
+  test_IsThreePointsInADirectionTemplate( 1, 3, 1, 3, 1, 4, 0 );
+  test_IsThreePointsInADirectionTemplate( 1, 3, 1, 4, 2, 3, 1 );
+  test_IsThreePointsInADirectionTemplate( 9, 9, 12, 12, 19, 19, 0 );
+  test_IsThreePointsInADirectionTemplate( 9, 9, 19, 19, 12, 12, 1 );
+  test_IsThreePointsInADirectionTemplate( 4, 9, 8, 10, 9, 11, 0 );
+  test_IsThreePointsInADirectionTemplate( 4, 9, 8, 10, 12, 7, 1 );
+}
+END_TEST
+
+static void test_IsThreePointsInABeamTemplate(
+   int x1,
+   int y1,
+   int x2,
+   int y2,
+   int x3,
+   int y3,
+   int IsFalse
+   ) {
+  ck_assert_int_eq( IsThreePointInABeam( x1, y1, x2, y2, x3, y3 ),
+                    !IsFalse );
+}
+
+START_TEST( test_IsThreePointsInABeam )
+{
+  test_IsThreePointsInABeamTemplate( 1, 2, 3, 4, 5, 6, 0 );
+  test_IsThreePointsInABeamTemplate( 1, 3, 1, 5, 1, 9, 0 );
+  test_IsThreePointsInABeamTemplate( 1, 3, 1, 9, 1, 4, 1 );
+  test_IsThreePointsInABeamTemplate( 1, 3, 1, 3, 1, 4, 0 );
+  test_IsThreePointsInABeamTemplate( 1, 3, 1, 4, 2, 3, 1 );
+  test_IsThreePointsInABeamTemplate( 9, 9, 12, 12, 19, 19, 0 );
+  test_IsThreePointsInABeamTemplate( 9, 9, 19, 19, 12, 12, 1 );
+  test_IsThreePointsInABeamTemplate( 4, 9, 8, 10, 9, 11, 1 );
+  test_IsThreePointsInABeamTemplate( 4, 9, 8, 10, 12, 7, 1 );
 }
 END_TEST
 
@@ -102,6 +161,40 @@ START_TEST( test_GetGpsLatFromDistance )
 }
 END_TEST
 
+static int IsIntEqualWithTolerant(
+   int x,
+   int y,
+   int epslion
+   ) {
+   return abs( x - y ) < epslion;
+}
+
+static void test_GetPointCorInOvalTemplate(
+   double angleCurrent,
+   int circleCenterX,
+   int circleCenterY,
+   double axisX,
+   double axisY,
+   int predictX,
+   int predictY
+   ) {
+   int calX, calY;
+   GetPointCorInOval( angleCurrent, circleCenterX, circleCenterY,
+                      axisX, axisY, &calX, &calY );
+   /* printf( "test_getpointcorinoval : calx %d predictx %d caly %d predicty %d\n", */
+   /*         calX, predictX, calY, predictY ); */
+   /* fflush( stdout ); */
+   ck_assert( IsIntEqualWithTolerant( calX, predictX, 3 ) );
+   ck_assert( IsIntEqualWithTolerant( calY, predictY, 3 ) );
+}
+
+START_TEST( test_GetPointCorInOval )
+{
+   test_GetPointCorInOvalTemplate( 0, 10, 30, 5, 5, 15, 30 );
+   test_GetPointCorInOvalTemplate( 0, 10, 30, 9, 12, 19, 30 );
+}
+END_TEST
+
 Suite *helperfun_suite(
    void
    ) {
@@ -116,7 +209,10 @@ Suite *helperfun_suite(
   tcase_add_test( tc_core, test_GetGpsLonFromDistance );
   tcase_add_test( tc_core, test_IsNumEven );
   tcase_add_test( tc_core, test_IsThreePointsInALine );
+  tcase_add_test( tc_core, test_IsThreePointsInADirection );
+  tcase_add_test( tc_core, test_IsThreePointsInABeam );
   tcase_add_test( tc_core, test_Turn2NormalRadiansRange );
+  tcase_add_test( tc_core, test_GetPointCorInOval );
   suite_add_tcase( s, tc_core );
 
   return s;
@@ -150,17 +246,17 @@ static void AssertEnvPathLineMember(
    }
 }
 
-static void test_FilterInALinePathLineMembersTemplate(
+static void test_FilterInBeamPathLineNextTemplate(
    int size,
    int *envX,
    int *envY,
    t_EnvPathLinePtr envPathLine
    ) {
-   t_EnvPathLinePtr filteredEnvPathLine = FilterInALinePathLineMembers( envPathLine );
+   t_EnvPathLinePtr filteredEnvPathLine = FilterInBeamPathLineNext( envPathLine );
    AssertEnvPathLineMember( size, envX, envY, filteredEnvPathLine );
 }
 
-START_TEST( test_FilterInALinePathLineMembers )
+START_TEST( test_FilterInBeamPathLineNext )
 {
    int x1[] = {
       1
@@ -169,7 +265,7 @@ START_TEST( test_FilterInALinePathLineMembers )
       2
    };
    t_EnvPathLinePtr envPathLine1 = CreateEnvPathLineWithXYArray( sizeof( x1 )/sizeof( int ), x1, y1 );
-   test_FilterInALinePathLineMembersTemplate( sizeof( x1 )/sizeof( int ), x1, y1, envPathLine1 );
+   test_FilterInBeamPathLineNextTemplate( sizeof( x1 )/sizeof( int ), x1, y1, envPathLine1 );
 
    int x2[] = {
       1, 2
@@ -178,7 +274,7 @@ START_TEST( test_FilterInALinePathLineMembers )
       1, 2
    };
    t_EnvPathLinePtr envPathLine2 = CreateEnvPathLineWithXYArray( sizeof( x2 )/sizeof( int ), x2, y2 );
-   test_FilterInALinePathLineMembersTemplate( sizeof( x2 )/sizeof( int ), x2, y2, envPathLine2 );
+   test_FilterInBeamPathLineNextTemplate( sizeof( x2 )/sizeof( int ), x2, y2, envPathLine2 );
 
    int x3[] = {
       1, 2, 3
@@ -193,22 +289,22 @@ START_TEST( test_FilterInALinePathLineMembers )
    int filteredY3[] = {
       1, 3
    };
-   test_FilterInALinePathLineMembersTemplate( sizeof( filteredX3 )/sizeof( int ), filteredX3, filteredY3, envPathLine3 );
+   test_FilterInBeamPathLineNextTemplate( sizeof( filteredX3 )/sizeof( int ), filteredX3, filteredY3, envPathLine3 );
 
    int x4[] = {
-      1, 2, 3, 4, 5, 6
+      1, 2, 3
    };
    int y4[] = {
-      1, 2, 3, 4, 5, 6
+      1, 2, 4
    };
    t_EnvPathLinePtr envPathLine4 = CreateEnvPathLineWithXYArray( sizeof( x4 )/sizeof( int ), x4, y4 );
    int filteredX4[] = {
-      1, 6
+      1, 2, 3
    };
    int filteredY4[] = {
-      1, 6
+      1, 2, 4
    };
-   test_FilterInALinePathLineMembersTemplate( sizeof( filteredX4 )/sizeof( int ), filteredX4, filteredY4, envPathLine4 );
+   test_FilterInBeamPathLineNextTemplate( sizeof( filteredX4 )/sizeof( int ), filteredX4, filteredY4, envPathLine4 );
 }
 END_TEST
 
@@ -395,7 +491,7 @@ static Suite *envPathLine_suite(
    tcase_add_test( tc_core, test_AppendEnvPathLine );
    tcase_add_test( tc_core, test_InsertNewGpsPathPoint );
    tcase_add_test( tc_core, test_TurnEnv2GpsPathLine );
-   tcase_add_test( tc_core, test_FilterInALinePathLineMembers );
+   tcase_add_test( tc_core, test_FilterInBeamPathLineNext );
    suite_add_tcase( s, tc_core );
 
    return s;

@@ -180,15 +180,17 @@ static int TestTemplateInRec(
    return 0;
 }
 
-struct t_ExpectedCruiseCricle SetInCircle(
+static struct t_ExpectedCruiseCricle SetInCircle(
    int lonCircleCenter,
    int latCircleCenter,
-   int radius
+   int radius,
+   unsigned char isCircleClockWise
    ) {
    struct t_ExpectedCruiseCricle circle;
    circle.m_lonCircleCenter = lonCircleCenter;
    circle.m_latCircleCenter = latCircleCenter;
    circle.m_circleRadius = radius;
+   circle.m_isClockWise = isCircleClockWise;
    return circle;
 }
 
@@ -200,6 +202,7 @@ static int TestTemplateInCircle(
    int lonCircleCenter,
    int latCircleCenter,
    int radius,
+   unsigned char isCircleClockWise,
    t_ObstaclesPtr obstacles
    ) {
    DebugCode(
@@ -208,7 +211,8 @@ static int TestTemplateInCircle(
       );
    struct t_RectangleArea rectangle = SetInRectangle( lonTopLeft, latTopLeft,
                                                       lonBottomRight, latBottomRight );
-   struct t_ExpectedCruiseCricle circle = SetInCircle( lonCircleCenter, latCircleCenter, radius );
+   struct t_ExpectedCruiseCricle circle = SetInCircle( lonCircleCenter, latCircleCenter,
+                                                       radius, isCircleClockWise );
    t_PathLinesPtr pathLines = GetCruisePointsInCircle( circle, rectangle, obstacles );
    FreeObstacles( obstacles );
    if ( pathLines != NULL ) {
@@ -277,9 +281,11 @@ static int TestNoObstacleInCircle(
    int lonCircleCenter = 1224631520;
    int latCircleCenter = 306969334;
    int radius = 6530;
+   unsigned char isCircleClockWise = 1;
    t_ObstaclesPtr obstacles = NULL;
    return TestTemplateInCircle( lonTopLeft, latTopLeft, lonBottomRight, latBottomRight,
-                                lonCircleCenter, latCircleCenter, radius, obstacles );
+                                lonCircleCenter, latCircleCenter, radius, isCircleClockWise,
+                                obstacles );
 }
 
 static t_PathLinesPtr GetNoObstaclePosWithMultiPos(
@@ -509,7 +515,7 @@ static int TestTwoObstacleInRec(
    int latTopLeft = 308890180;
    int lonBottomRight = 1227319960;
    int latBottomRight = 307873053;
-   int width = 500;
+   int width = 520;
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
@@ -526,10 +532,12 @@ static int TestTwoObstacleInCircle(
    int lonCircleCenter = 1226419960;
    int latCircleCenter = 308388888;
    int radius = 2800;
+   unsigned char isCircleClockWise = 0;
    t_ObstaclesPtr obstacles = GetTwoObstaclesInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    return TestTemplateInCircle( lonTopLeft, latTopLeft, lonBottomRight, latBottomRight,
-                                lonCircleCenter, latCircleCenter, radius, obstacles );
+                                lonCircleCenter, latCircleCenter, radius, isCircleClockWise,
+                                obstacles );
 }
 
 static int TestTwoObstaclePosWithMultiPos(
@@ -604,11 +612,14 @@ static int TestFullObstacleInCircle(
    int lonCircleCenter = 1226419960;
    int latCircleCenter = 308388888;
    int radius = 1000;
+   unsigned char isCircleClockWise = 1;
    t_ObstaclesPtr obstacles = GetFullObstacleInArea( lonTopLeft, latTopLeft,
                                                      lonBottomRight, latBottomRight );
    return TestTemplateInCircle( lonTopLeft, latTopLeft, lonBottomRight, latBottomRight,
-                                lonCircleCenter, latCircleCenter, radius, obstacles );
+                                lonCircleCenter, latCircleCenter, radius, isCircleClockWise,
+                                obstacles );
 }
+
 int main(
    int argc,
    char *argv[]

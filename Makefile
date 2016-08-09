@@ -8,7 +8,7 @@ else
 	CFLAGS = -O2 -DNDEBUG
 endif
 
-OBJECTS = advancedplan.o localplanning.o pretreatment.o envoperate.o heapqueue.o publicfun.o mission.o fifoqueue.o
+OBJECTS = advancedplan.o localplanning.o pretreatment.o envoperate.o heapqueue.o publicfun.o mission.o fifoqueue.o scansearchinrec.o
 TESTSAMPLE = test.c
 UNITTESTTARGETS = $(basename $(wildcard test_*.c))
 TARGETS = test
@@ -32,6 +32,7 @@ envoperate.o : envoperate.h publicfun.h
 fifoqueue.o : fifoqueue.h publicfun.h
 heapqueue.o : heapqueue.h publicfun.h
 publicfun.o : publicfun.h
+scansearchinrec.o : scansearchinrec.h publicfun.h
 
 .PHONY : clean
 clean :

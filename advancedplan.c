@@ -15,6 +15,7 @@
 #include "publicfun.h"
 #include "fifoqueue.h"
 #include "mission.h"
+#include "scansearchinrec.h"
 
 #define c_angleDeltaPerRadians 0.04
 
@@ -133,7 +134,7 @@ static int DepthFirstPriority(
    t_EnvironmentPtr environment
    ) {
    int xHeuristic = GetEnvEndX( environment) - GetEnvMemberX( member );
-   int yHeuristic = GetEnvEndY( environment)-  GetEnvMemberY( member );
+   int yHeuristic = GetEnvEndY( environment) - GetEnvMemberY( member );
 
    xHeuristic = abs( xHeuristic );
    yHeuristic = abs( yHeuristic );
@@ -175,7 +176,7 @@ static t_EnvPathLinePtr CreateEnvPathLine(
    return memberNew;
 }
 
-static t_EnvPathLinePtr InsertNewEnvPathLine(
+t_EnvPathLinePtr InsertNewEnvPathLine(
    int x,
    int y,
    t_EnvPathLinePtr envPathLine
@@ -218,8 +219,9 @@ static t_EnvPathLinePtr StoreDistributedPoints(
       isGoUp = 1;
    else
       isGoUp = 0;
-   if ( ( yMax - yMin ) > width * widthCount )
+   if ( ( yMax - yMin ) > width * widthCount ) {
       widthCount++;              /* need to compensate the rest of the width */
+   }
 
    int itemp_x, jtemp_x;
    if ( IsNumEven( widthCount ) ) {
@@ -252,6 +254,173 @@ static t_EnvPathLinePtr StoreDistributedPoints(
       distributedPoints = StoreNewDistributedMembers( jtemp_x, yMin, distributedPoints );
    }
    return distributedPoints;
+}
+
+static void StoreDistributedPointsCor(
+   const int xCurrent,
+   const int yCurrent,
+   const int index,
+   int *corX,
+   int *corY
+   ) {
+   *( corX + index ) = xCurrent;
+   *( corY + index ) = yCurrent;
+}
+
+static void StoreDistributedPointsTwoSidesXCor(
+   const int xCurrent,
+   const int xNext,
+   const int yCurrent,
+   const int index,
+   int *corX,
+   int *corY
+   ) {
+   StoreDistributedPointsCor( xCurrent, yCurrent, index, corX, corY );
+   StoreDistributedPointsCor( xNext, yCurrent, index + 1, corX, corY );
+}
+
+static int GetLengthGoingUpDistributedPoints(
+   const int xMin,
+   const int xMax,
+   const int yMax,
+   const int xStart,
+   const int yStart,
+   const int width,
+   int *corX,
+   int *corY
+   ) {
+   int xASide = xStart;
+   int xBSide = xMin + xMax - xASide;
+   int i = 0;
+   int yCurrent = yStart;
+   for ( int yLast = yMax - width; yCurrent < yLast; yCurrent += width ) {
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
+      i = i + 2;
+      SwapNum( &xASide, &xBSide );
+   }
+   if ( yCurrent + width == yMax ) {
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
+      i = i + 2;
+   } else {
+      int yPrevLast = yCurrent + ( yMax - yCurrent )/2;
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yPrevLast, i, corX, corY );
+      i = i + 2;
+      SwapNum( &xASide, &xBSide );
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yMax, i, corX, corY );
+      i = i+ 2;
+   }
+   return i;
+}
+
+static int GetLengthGoingDownDistributedPoints(
+   const int xMin,
+   const int yMin,
+   const int xMax,
+   const int xStart,
+   const int yStart,
+   const int width,
+   int *corX,
+   int *corY
+   ) {
+   int xASide = xStart;
+   int xBSide = xMin + xMax - xASide;
+   int i = 0;
+   int yCurrent = yStart;
+   for ( int yLast = yMin + width; yCurrent > yLast; yCurrent -= width ) {
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
+      i = i + 2;
+      SwapNum( &xASide, &xBSide );
+   }
+   if ( yCurrent - width == yMin ) {
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
+      i = i + 2;
+   } else {
+      int yPrevLast = yCurrent - ( yCurrent - yMin )/2;
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yPrevLast, i, corX, corY );
+      i = i + 2;
+      SwapNum( &xASide, &xBSide );
+      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yMin, i, corX, corY );
+      i = i+ 2;
+   }
+   return i;
+}
+
+static void StoreDistributedPointsTwoSidesYCor(
+   const int xCurrent,
+   const int yCurrent,
+   const int yNext,
+   const int index,
+   int *corX,
+   int *corY
+   ) {
+   StoreDistributedPointsCor( xCurrent, yCurrent, index, corX, corY );
+   StoreDistributedPointsCor( xCurrent, yNext, index, corX, corY );
+}
+
+static int GetHeightGoingUpDistributedPoints(
+   const int yMin,
+   const int xMax,
+   const int yMax,
+   const int xStart,
+   const int yStart,
+   const int width,
+   int *corX,
+   int *corY
+   ) {
+   int yASide = yStart;
+   int yBSide = yMin + yMax - yASide;
+   int i = 0;
+   int xCurrent = xStart;
+   for ( int xLast = xMax - width; xCurrent < xLast; xCurrent += width ) {
+      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+      SwapNum( &yASide, &yBSide );
+   }
+   if ( xCurrent + width == xMax ) {
+      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+   } else {
+      int xPrevLast = xCurrent + ( xMax - xCurrent )/2;
+      StoreDistributedPointsTwoSidesYCor( xPrevLast, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+      SwapNum( &yASide, &yBSide );
+      StoreDistributedPointsTwoSidesYCor( yMax, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+   }
+   return i;
+}
+
+static int GetHeightGoingDownDistributedPoints(
+   const int xMin,
+   const int yMin,
+   const int yMax,
+   const int xStart,
+   const int yStart,
+   const int width,
+   int *corX,
+   int *corY
+   ) {
+   int yASide = yStart;
+   int yBSide = yMin + yMax - yASide;
+   int i = 0;
+   int xCurrent = xStart;
+   for ( int xLast = xMin + width; xCurrent > xLast; xCurrent -= width ) {
+      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+      SwapNum( &yASide, &yBSide );
+   }
+   if ( xCurrent + width == xMin ) {
+      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+   } else {
+      int xPrevLast = xCurrent + ( xCurrent - xMin )/2;
+      StoreDistributedPointsTwoSidesYCor( xPrevLast, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+      SwapNum( &yASide, &yBSide );
+      StoreDistributedPointsTwoSidesYCor( yMax, yASide, yBSide, i, corX, corY );
+      i = i + 2;
+   }
+   return i;
 }
 
 /* This routine get the distributed points with the request of the scan search */
@@ -462,6 +631,16 @@ static void PrintPosPathLines(
    PrintGpsPathLines( pathLine, "The position path line" );
 }
 
+static int IsTwoPointEqual(
+   int x1,
+   int y1,
+   int x2,
+   int y2
+   ) {
+   return ( ( x1 == x2 ) &&
+            ( y1 == y2 ) );
+}
+
 static int IsThreePointInALine(
    int x1,
    int y1,
@@ -474,23 +653,57 @@ static int IsThreePointInALine(
       /* just take care of the condition that delta of x is zero */
       return 1;
    } else if ( ( x1 == x2 ) || ( x1 == x3 ) || ( x2 == x3 ) ) {
+      if ( IsTwoPointEqual( x1, y1, x2, y2 ) ||
+           IsTwoPointEqual( x1, y1, x3, y3 ) ||
+           IsTwoPointEqual( x2, y2, x3, y3 ) ) {
+         return 1;
+      } else {
       return 0;
+      }
    } else {
-      double delta1 = ( double ) abs( y1 - y2 ) / ( double ) ( abs( x1 - x2 ) );
-      double delta2 = ( double ) abs( y2 - y3 ) / ( double ) ( abs( x2 - x3 ) );
+      double delta1 = ( double ) abs( y2 - y1 ) / ( double ) abs( x2 - x1 );
+      double delta2 = ( double ) abs( y3 - y2 ) / ( double ) abs( x3 - x2 );
       return IsDoubleEqual( delta1, delta2 );
    }
 }
 
-/* This routine filter the neighbouring members that their cordinatation in a line */
-static t_EnvPathLinePtr FilterInALinePathLineMembers(
+static int IsThreePointInADirection(
+   int x1,
+   int y1,
+   int x2,
+   int y2,
+   int x3,
+   int y3
+   ) {
+   if ( ( x2 - x1 ) * ( x3 - x2 ) >= 0 &&
+        ( y2 - y1 ) * ( y3 - y2 ) >= 0 ) {
+      return 1;
+   } else {
+      return 0;
+   }
+}
+
+static int IsThreePointInABeam(
+   int x1,
+   int y1,
+   int x2,
+   int y2,
+   int x3,
+   int y3
+   ) {
+   return ( IsThreePointInALine( x1, y1, x2, y2, x3, y3 ) &&
+            IsThreePointInADirection( x1, y1, x2, y2, x3, y3 ) );
+}
+
+/* This routine filter the next member that their cordinatation in a line */
+static t_EnvPathLinePtr FilterInBeamPathLineNext(
    t_EnvPathLinePtr envPathLine
    ) {
    assert( envPathLine != NULL );
 
    t_EnvPathLinePtr currentEnvPathLine = envPathLine;
    while ( IsDoubleNextEnvPathMemberExist( currentEnvPathLine ) ) {
-      if ( IsThreePointInALine( GetEnvPathMemberX( currentEnvPathLine ),
+      if ( IsThreePointInABeam( GetEnvPathMemberX( currentEnvPathLine ),
                                 GetEnvPathMemberY( currentEnvPathLine ),
                                 GetNextEnvPathMemberX( currentEnvPathLine ),
                                 GetNextEnvPathMemberY( currentEnvPathLine ),
@@ -521,7 +734,7 @@ static t_PathLinesPtr GetGpsPathLineFromEnvPathLine(
          fflush( stdout );
          );
       InsertNewGpsPathPoint( x, y, pathLine );
-      currentEnvPathLine = FilterInALinePathLineMembers( currentEnvPathLine );
+      currentEnvPathLine = FilterInBeamPathLineNext( currentEnvPathLine );
    }
    return pathLine;
 }
@@ -706,6 +919,12 @@ static int GetCircleRadius(
    return circle.m_circleRadius;
 }
 
+static int IsCircleClockWise(
+   struct t_ExpectedCruiseCricle circle
+   ) {
+   return circle.m_isClockWise;
+}
+
 static int GetCircleCenterX(
    struct t_ExpectedCruiseCricle circle,
    t_EnvironmentPtr environment
@@ -713,7 +932,6 @@ static int GetCircleCenterX(
    int lonCircleCenter = GetGpsCircleCenterLon( circle );
    return GetEnvXFromGpsLon( lonCircleCenter, environment );
 }
-
 static int GetCircleCenterY(
    struct t_ExpectedCruiseCricle circle,
    t_EnvironmentPtr environment
@@ -723,12 +941,12 @@ static int GetCircleCenterY(
 }
 
 /* This routine get the cor of point through solving the equation of :
-   1. k = sin(alpha)
+   1. k = tan(alpha)
    2. y - y0 = k( x - x0 )
    3. ( x - x0 )^2/a^2 + ( y - y0 )^2/b^2 = 1
    The solution is :
-   x = a * b/sqrt( b^2 + a^2 * k^2 ) + x0
-   y = k( x - x0 ) + y0
+   |x| = a * b/sqrt( b^2 + a^2 * k^2 ) + x0
+   |y| = k( x - x0 ) + y0
    To be simplity: we declare that
    the value of x and y is according to the quadrant
 */
@@ -741,7 +959,7 @@ static void GetPointCorInOval(
    int *pointX,
    int *pointY
    ) {
-   double gradient = sin( angleCurrent );
+   double gradient = tan( angleCurrent );
    double denominator = sqrt( IntSquare( axisY ) + IntSquare( axisX * gradient ) );
    double deltaX = axisX * axisY / denominator;
    double deltaY = deltaX * fabs( gradient );
@@ -795,26 +1013,28 @@ static t_EnvPathLinePtr GetEnvOvalDistributedPoints(
    double axisY,
    t_EnvironmentPtr environment
    ) {
-   int count = 2 * c_pi / radiansDelta;
+   int count = 2 * c_pi / fabs( radiansDelta );
    double radiansCurrent = Turn2NormalRadiansRange( radiansStart );
    int firstX, firstY;
    GetPointCorInOval( radiansCurrent, circleCenterX, circleCenterY,
                       axisX, axisY, &firstX, &firstY );
    t_EnvPathLinePtr distributedPoints = NULL;
    for ( int i = 0; i < count; i++ ) {
-      printf( "GetEnvOvalDistributedPoints : radiansCurrent %f\n", radiansCurrent );
       int pointX, pointY;
       GetPointCorInOval( radiansCurrent,
                          circleCenterX, circleCenterY,
                          axisX, axisY,
                          &pointX, &pointY );
-      printf( "GetEnvOvalDistributedPoints : i %d nd x %d y %d \n", i, pointX, pointY );
+      DebugCode(
+      printf( "GetEnvOvalDistributedPoints : i %d nd radians %f x %d y %d \n",
+              i, radiansCurrent, pointX, pointY );
       fflush( stdout );
+         );
       if ( !IsEnvPointInEnv( pointX, pointY, environment ) ) {
          DebugCode(
             printf( "GetEnvOvalDistributedPoints : x %d y %d is not in env\n", pointX, pointY );
             fflush( stdout );
-            )
+            );
          FreePathLine( distributedPoints );
          return NULL;
       }
@@ -829,6 +1049,7 @@ static t_EnvPathLinePtr GetCircleDistributedPoints(
    int circleCenterX,
    int circleCenterY,
    int circleRadius,
+   unsigned char isClockWise,
    t_EnvironmentPtr environment
    ) {
    double axisX = ( double )circleRadius / GetEnvLengthOfUnit( environment );
@@ -837,8 +1058,9 @@ static t_EnvPathLinePtr GetCircleDistributedPoints(
       printf( "GetCircleDistributedPoints : circle center x %d y %d\n",
               circleCenterX, circleCenterY );
       fflush( stdout );
-      )
-   double radiansDelta = c_angleDeltaPerRadians;
+      );
+   double radiansDelta = isClockWise == 1 ? ( fabs( c_angleDeltaPerRadians ) * -1 ) :
+      fabs( c_angleDeltaPerRadians );
    double radiansStart = 0;     /* may be cal according to the start point */
    return GetEnvOvalDistributedPoints( radiansStart, radiansDelta,
                                        circleCenterX, circleCenterY,
@@ -913,17 +1135,12 @@ static int IsStartAndEndPointValid(
    }
 }
 
-/* This routine returns the path line which go through the free points
+/* This routine returns the path line which go through the given points
    which near the request points most. */
-static t_PathLinesPtr GetFreePathLineThroughMultiPoints(
+static t_PathLinesPtr GetFinalPathLineThroughMultiPoints(
    t_EnvPathLinePtr distributedPoints,
    t_EnvironmentPtr environment
    ) {
-   /* if no free points exist, then return false */
-   if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) {
-      return NULL;
-   }
-
    /* Do the path plan search between every neighbouring distribute points */
    t_EnvPathLinePtr member = distributedPoints;
    int xPrev = GetEnvPathMemberX( member );
@@ -954,25 +1171,45 @@ static t_PathLinesPtr GetFreePathLineThroughMultiPoints(
    between the start points and end points, then pathplanning to get the free
    ( no collision with the obstacle ) path line which through the points or some points near it.
    This routine return the final path line if the scansearch is success, otherwise return NULL */
-t_PathLinesPtr ScanSearch(
+/* t_PathLinesPtr ScanSearch( */
+/*    int xStart, */
+/*    int yStart, */
+/*    int xEnd, */
+/*    int yEnd, */
+/*    int width, */
+/*    t_EnvironmentPtr environment */
+/*    ) { */
+/*    if ( !IsStartAndEndPointValid( xStart, yStart, xEnd, yEnd, environment ) ) { */
+/*       return NULL; */
+/*    } */
+
+/*    t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart, */
+/*                                                              xEnd, yEnd, */
+/*                                                              width ); */
+/*    /\* if no free points exist, then return false *\/ */
+/*    if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) { */
+/*       return NULL; */
+/*    } */
+
+/*    t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( distributedPoints, environment ); */
+/*    FreePathLine( distributedPoints ); */
+/*    return finalPathLine; */
+/* } */
+
+t_PathLinesPtr ScanSearchWithANN(
    int xStart,
    int yStart,
    int xEnd,
    int yEnd,
-   int width,
+   unsigned char isScanLineHorizon,
    t_EnvironmentPtr environment
    ) {
-   if ( !IsStartAndEndPointValid( xStart, yStart, xEnd, yEnd, environment ) ) {
-      return NULL;
-   }
-
-   t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart,
-                                                             xEnd, yEnd,
-                                                             width );
-   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
-   FreePathLine( distributedPoints );
+   t_EnvPathLinePtr envPathLine = DoScanSearchInRec( xStart, yStart, xEnd, yEnd, isScanLineHorizon, environment );
+   t_PathLinesPtr finalPathLine = GetFinalGpsPathLine( envPathLine, environment );
+   FreePathLine( envPathLine );
    return finalPathLine;
 }
+
 
 t_PathLinesPtr CircleCruisePathPlan(
    struct t_ExpectedCruiseCricle circle,
@@ -981,8 +1218,10 @@ t_PathLinesPtr CircleCruisePathPlan(
    int circleCenterX = GetCircleCenterX( circle, environment );
    int circleCenterY = GetCircleCenterY( circle, environment );
    int circleRadius = GetCircleRadius( circle );
+   unsigned char isClockWise = IsCircleClockWise( circle );
    t_EnvPathLinePtr distributedPoints = GetCircleDistributedPoints( circleCenterX, circleCenterY,
-                                                                    circleRadius, environment );
+                                                                    circleRadius, isClockWise,
+                                                                    environment );
    if ( distributedPoints == NULL ) {
       return NULL;
    }
@@ -991,7 +1230,7 @@ t_PathLinesPtr CircleCruisePathPlan(
       PrintEntirePathMembers( distributedPoints );
       fflush( stdout );
       );
-   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( distributedPoints, environment );
+   t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( distributedPoints, environment );
    FreePathLine( distributedPoints );
    return finalPathLine;
 }
@@ -1016,7 +1255,12 @@ t_PathLinesPtr MultiGpsPosPathPlan(
       PrintEntirePathMembers( passedPoints );
       fflush( stdout );
       );
-   t_PathLinesPtr finalPathLine = GetFreePathLineThroughMultiPoints( passedPoints, environment );
+   /* if no free points exist, then return false */
+   if ( ChangeDistributedWithNearestFreePoints( passedPoints, environment) == 0 ) {
+      return NULL;
+   }
+
+   t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( passedPoints, environment );
    FreePathLine( passedPoints );
    return finalPathLine;
 }

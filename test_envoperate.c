@@ -6,7 +6,7 @@
 #include "envoperate.h"
 #include "envoperate.c"
 
-static int test_GetEnvXFromGpsLonTemplate(
+static void test_GetEnvXFromGpsLonTemplate(
    int lon,
    t_EnvironmentPtr environment,
    int predictX
@@ -29,7 +29,7 @@ START_TEST( test_GetEnvXFromGpsLon )
 }
 END_TEST
 
-static int test_GetEnvYFromGpsLatTemplate(
+static void test_GetEnvYFromGpsLatTemplate(
    int lat,
    t_EnvironmentPtr environment,
    int predictY

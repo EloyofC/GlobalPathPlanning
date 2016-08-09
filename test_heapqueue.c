@@ -98,20 +98,20 @@ static void test_PriorityQueueOneTurnInOut(
 
    memcpy( sorted, test, length * sizeof( int ) );
    qsort( sorted, length, sizeof( int ), NormalCompare );
-  /*  for ( i = 0; i < length; i++ ) { */
-  /*     mem[ i ] = CreateEnvMemberWithCost( test[ i ] ); */
-  /*  } */
-  /*  for ( i = 0; i < length; i++ ) { */
-  /*     queue = InsertPriorityQueue( MemberCompare, mem[ i ], queue ); */
-  /*  } */
-  /*  int cost; */
-  /*  for ( i = 0; i < length; i++ ) { */
-  /*     cost = GetEnvMemberCost( DeleteMinPriorityQueue(MemberCompare, queue) ); */
-  /*     ck_assert_msg( sorted[ i ] == cost, "The number before %d - %d - after %d is not right\n", test[ i - 1 ], test [ i ], test[ i + 1 ] ); */
-  /*  } */
-  /*  for ( i = 0; i < length; i++ ) { */
-  /*   FreeEnvMember( mem[ i ] ); */
-  /* } */
+   for ( i = 0; i < length; i++ ) {
+      mem[ i ] = CreateEnvMemberWithCost( test[ i ] );
+   }
+   for ( i = 0; i < length; i++ ) {
+      queue = InsertPriorityQueue( MemberCompare, mem[ i ], queue );
+   }
+   int cost;
+   for ( i = 0; i < length; i++ ) {
+      cost = GetEnvMemberCost( DeleteMinPriorityQueue(MemberCompare, queue) );
+      ck_assert_msg( sorted[ i ] == cost, "The number before %d - %d - after %d is not right\n", test[ i - 1 ], test [ i ], test[ i + 1 ] );
+   }
+   for ( i = 0; i < length; i++ ) {
+    FreeEnvMember( mem[ i ] );
+  }
 }
 
 /* test case template for initial to be empty, the order out of the queue is right, and the end queue is empty is true */
