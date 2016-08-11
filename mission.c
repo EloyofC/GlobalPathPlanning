@@ -80,13 +80,15 @@ static unsigned char IsScanWidthHorizon(
 /*    int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_heightOfUnit; */
 /*    t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft, */
 /*                                                               lonBottomRight, latBottomRight, */
+/*                                                               c_lengthOfUnit, c_heightOfUnit, */
 /*                                                               obstacles ); */
 
 /*    int endPointX = cellEndX - 1; */
 /*    int endPointY = cellEndY - 1; */
 /*    int width = GetWidthFromScanWidthInfo( widthInfo ); */
 /*    t_PathLinesPtr finalPathLine = NULL; */
-/*    if ( IsScanWidthHorizon( widthInfo ) ) { */
+/*    int isScanLineHorizon = IsScanWidthHorizon( widthInfo ); */
+/*    if ( isScanLineHorizon ) { */
 /*       /\* ensure that the cellWidth is larger than 1 *\/ */
 /*       int cellWidth = width < c_heightOfUnit ? 1 : width / c_heightOfUnit; */
 /*       finalPathLine = ScanSearch( cellStartX, cellStartY, */

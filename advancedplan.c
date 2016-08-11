@@ -45,7 +45,7 @@ static t_EnvPathLinePtr GetEnvPathMemberNext(
    return envPathLineMember->m_next;
 }
 
-static void PrintEntirePathMembers(
+static void PrintDistributedPathMembers(
    t_EnvPathLinePtr envPathLine
    ) {
    int i = 0;
@@ -53,10 +53,21 @@ static void PrintEntirePathMembers(
    for ( t_EnvPathLinePtr memberNext = envPathLine;
          memberNext != NULL;
          memberNext = memberNext->m_next )
-      printf( "The entire final pass point : the %d nd point x %d y %d\n",
+      printf( "The distribute pass point : the %d nd point x %d y %d\n",
               i++, memberNext->m_xIndex, memberNext->m_yIndex );
 }
 
+static void PrintDistributedFreePathMembers(
+   t_EnvPathLinePtr envPathLine
+   ) {
+   int i = 0;
+
+   for ( t_EnvPathLinePtr memberNext = envPathLine;
+         memberNext != NULL;
+         memberNext = memberNext->m_next )
+      printf( "The distributed free pass point : the %d nd point x %d y %d\n",
+              i++, memberNext->m_xIndex, memberNext->m_yIndex );
+}
 
 static void FreePathLine(
    t_EnvPathLinePtr envPathLine
@@ -722,7 +733,7 @@ static t_PathLinesPtr GetGpsPathLineFromEnvPathLine(
    ) {
    t_PathLinesPtr pathLine = CreateGpsPathLine();
    DebugCode(
-      PrintEntirePathMembers( envPathLine );
+      PrintDistributedPathMembers( envPathLine );
       );
    for ( t_EnvPathLinePtr currentEnvPathLine = envPathLine;
          !IsEnvPathMemberEmpty( currentEnvPathLine );
@@ -1171,30 +1182,40 @@ static t_PathLinesPtr GetFinalPathLineThroughMultiPoints(
    between the start points and end points, then pathplanning to get the free
    ( no collision with the obstacle ) path line which through the points or some points near it.
    This routine return the final path line if the scansearch is success, otherwise return NULL */
-/* t_PathLinesPtr ScanSearch( */
-/*    int xStart, */
-/*    int yStart, */
-/*    int xEnd, */
-/*    int yEnd, */
-/*    int width, */
-/*    t_EnvironmentPtr environment */
-/*    ) { */
-/*    if ( !IsStartAndEndPointValid( xStart, yStart, xEnd, yEnd, environment ) ) { */
-/*       return NULL; */
-/*    } */
+t_PathLinesPtr ScanSearch(
+   int xStart,
+   int yStart,
+   int xEnd,
+   int yEnd,
+   int width,
+   t_EnvironmentPtr environment
+   ) {
+   if ( !IsStartAndEndPointValid( xStart, yStart, xEnd, yEnd, environment ) ) {
+      return NULL;
+   }
 
-/*    t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart, */
-/*                                                              xEnd, yEnd, */
-/*                                                              width ); */
-/*    /\* if no free points exist, then return false *\/ */
-/*    if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) { */
-/*       return NULL; */
-/*    } */
+   t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart,
+                                                             xEnd, yEnd,
+                                                             width );
 
-/*    t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( distributedPoints, environment ); */
-/*    FreePathLine( distributedPoints ); */
-/*    return finalPathLine; */
-/* } */
+   DebugCode(
+      PrintDistributedPathMembers( distributedPoints );
+      fflush( stdout );
+      );
+   /* if no free points exist, then return false */
+   if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) {
+      return NULL;
+   }
+
+   DebugCode(
+      PrintDistributedFreePathMembers( distributedPoints );
+      fflush( stdout );
+      );
+
+   t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( distributedPoints, environment );
+   FreePathLine( distributedPoints );
+   return finalPathLine;
+}
 
 t_PathLinesPtr ScanSearchWithANN(
    int xStart,
@@ -1227,9 +1248,18 @@ t_PathLinesPtr CircleCruisePathPlan(
    }
 
    DebugCode(
-      PrintEntirePathMembers( distributedPoints );
+      PrintDistributedPathMembers( distributedPoints );
       fflush( stdout );
       );
+   if ( ChangeDistributedWithNearestFreePoints( distributedPoints, environment) == 0 ) {
+      return NULL;
+   }
+
+   DebugCode(
+      PrintDistributedFreePathMembers( distributedPoints );
+      fflush( stdout );
+      );
+
    t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( distributedPoints, environment );
    FreePathLine( distributedPoints );
    return finalPathLine;
@@ -1252,13 +1282,18 @@ t_PathLinesPtr MultiGpsPosPathPlan(
       return NULL;
    }
    DebugCode(
-      PrintEntirePathMembers( passedPoints );
+      PrintDistributedPathMembers( passedPoints );
       fflush( stdout );
       );
    /* if no free points exist, then return false */
    if ( ChangeDistributedWithNearestFreePoints( passedPoints, environment) == 0 ) {
       return NULL;
    }
+
+   DebugCode(
+      PrintDistributedFreePathMembers( passedPoints );
+      fflush( stdout );
+      );
 
    t_PathLinesPtr finalPathLine = GetFinalPathLineThroughMultiPoints( passedPoints, environment );
    FreePathLine( passedPoints );

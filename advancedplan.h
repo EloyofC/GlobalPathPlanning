@@ -25,7 +25,8 @@ void InsertNewGpsPathPoint( int x, int y, t_PathLinesPtr pathLine );
 t_PathLinesPtr CreateGpsPathLine( void );
 void PrintGpsPathLines( t_PathLinesPtr pathLine, char *str );
 void PrintAndFreePathLine( void );
-t_PathLinesPtr ScanSearchWithANN( int xStart, int yStart, int xEnd, int yEnd, unsigned char isScanLineHorizon, t_EnvironmentPtr m_environment );
+t_PathLinesPtr ScanSearchWithANN( int xStart, int yStart, int xEnd, int yEnd, unsigned char isScanLineHorizon, t_EnvironmentPtr environment );
+t_PathLinesPtr ScanSearch( int xStart, int yStart, int xEnd, int yEnd, int width, t_EnvironmentPtr environment );
 t_PathLinesPtr MultiGpsPosPathPlan( t_PathLinesPtr positions, t_EnvironmentPtr environment );
 t_PathLinesPtr CircleCruisePathPlan( struct t_ExpectedCruiseCricle circle, t_EnvironmentPtr environment );
 

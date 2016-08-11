@@ -624,5 +624,5 @@ int main(
    int argc,
    char *argv[]
    ) {
-   return TestTwoObstacleInCircle();
+   return TestSingleObstacleInRec();
 }
