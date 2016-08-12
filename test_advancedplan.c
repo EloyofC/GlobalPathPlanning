@@ -478,6 +478,158 @@ START_TEST( test_TurnEnv2GpsPathLine )
 }
 END_TEST
 
+START_TEST( test_GetLengthGoingUpDistributedPoints )
+{
+   int xMin1 = 1;
+   int xMax1 = 18;
+   int yMax1 = 20;
+   int xStart1 = 2;
+   int yStart1 = 2;
+   int width1 = 5;
+   t_EnvPathLinePtr distributedPoints1 = GetLengthGoingUpDistributedPoints( xMin1, xMax1, yMax1, xStart1, yStart1, width1 );
+   int predictDistributedPointsX1[] = {
+      18, 1, 1, 18, 18, 1, 1, 18, 18, 2
+   };
+   int predictDistributedPointsY1[] = {
+      20, 20, 17, 17, 12, 12, 7, 7, 2, 2
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX1 )/sizeof( int ),
+                            predictDistributedPointsX1, predictDistributedPointsY1,
+                            distributedPoints1 );
+
+   int xMin2 = 3;
+   int xMax2 = 10;
+   int yMax2 = 20;
+   int xStart2 = 4;
+   int yStart2 = 5;
+   int width2 = 5;
+   t_EnvPathLinePtr distributedPoints2 = GetLengthGoingUpDistributedPoints( xMin2, xMax2, yMax2, xStart2, yStart2, width2 );
+   int predictDistributedPointsX2[] = {
+      3, 10, 10, 3, 3, 10, 10, 4
+   };
+   int predictDistributedPointsY2[] = {
+      20, 20, 15, 15, 10, 10, 5, 5
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX2 )/sizeof( int ),
+                            predictDistributedPointsX2, predictDistributedPointsY2,
+                            distributedPoints2 );
+}
+END_TEST
+
+START_TEST( test_GetLengthGoingDownDistributedPoints )
+{
+   int xMin1 = 1;
+   int yMin1 = 1;
+   int xMax1 = 18;
+   int xStart1 = 2;
+   int yStart1 = 20;
+   int width1 = 5;
+   t_EnvPathLinePtr distributedPoints1 = GetLengthGoingDownDistributedPoints( xMin1, yMin1, xMax1, xStart1, yStart1, width1 );
+   int predictDistributedPointsX1[] = {
+      18, 1, 1, 18, 18, 1, 1, 18, 18, 2
+   };
+   int predictDistributedPointsY1[] = {
+      1, 1, 5, 5, 10, 10, 15, 15, 20, 20
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX1 )/sizeof( int ),
+                            predictDistributedPointsX1, predictDistributedPointsY1,
+                            distributedPoints1 );
+
+   int xMin2 = 3;
+   int yMin2 = 5;
+   int xMax2 = 10;
+   int xStart2 = 7;
+   int yStart2 = 20;
+   int width2 = 5;
+   t_EnvPathLinePtr distributedPoints2 = GetLengthGoingDownDistributedPoints( xMin2, yMin2, xMax2, xStart2, yStart2, width2 );
+   int predictDistributedPointsX2[] = {
+      10, 3, 3, 10, 10, 3, 3, 7
+   };
+   int predictDistributedPointsY2[] = {
+      5, 5, 10, 10, 15, 15, 20, 20
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX2 )/sizeof( int ),
+                            predictDistributedPointsX2, predictDistributedPointsY2,
+                            distributedPoints2 );
+}
+END_TEST
+
+START_TEST( test_GetHeightGoingUpDistributedPoints )
+{
+   int yMin1 = 1;
+   int xMax1 = 20;
+   int yMax1 = 18;
+   int xStart1 = 2;
+   int yStart1 = 2;
+   int width1 = 5;
+   t_EnvPathLinePtr distributedPoints1 = GetHeightGoingUpDistributedPoints( yMin1, xMax1, yMax1, xStart1, yStart1, width1 );
+   int predictDistributedPointsX1[] = {
+      20, 20, 17, 17, 12, 12, 7, 7, 2, 2
+   };
+   int predictDistributedPointsY1[] = {
+      18, 1, 1, 18, 18, 1, 1, 18, 18, 2
+
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX1 )/sizeof( int ),
+                            predictDistributedPointsX1, predictDistributedPointsY1,
+                            distributedPoints1 );
+
+   int yMin2 = 3;
+   int xMax2 = 20;
+   int yMax2 = 10;
+   int xStart2 = 5;
+   int yStart2 = 4;
+   int width2 = 5;
+   t_EnvPathLinePtr distributedPoints2 = GetHeightGoingUpDistributedPoints( yMin2, xMax2, yMax2, xStart2, yStart2, width2 );
+   int predictDistributedPointsX2[] = {
+      20, 20, 15, 15, 10, 10, 5, 5
+   };
+   int predictDistributedPointsY2[] = {
+      3, 10, 10, 3, 3, 10, 10, 4
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX2 )/sizeof( int ),
+                            predictDistributedPointsX2, predictDistributedPointsY2,
+                            distributedPoints2 );
+}
+END_TEST
+
+START_TEST( test_GetHeightGoingDownDistributedPoints )
+{
+   int xMin1 = 1;
+   int yMin1 = 1;
+   int yMax1 = 18;
+   int xStart1 = 20;
+   int yStart1 = 2;
+   int width1 = 5;
+   t_EnvPathLinePtr distributedPoints1 = GetHeightGoingDownDistributedPoints( xMin1, yMin1, yMax1, xStart1, yStart1, width1 );
+   int predictDistributedPointsX1[] = {
+      1, 1, 5, 5, 10, 10, 15, 15, 20, 20
+   };
+   int predictDistributedPointsY1[] = {
+      18, 1, 1, 18, 18, 1, 1, 18, 18, 2
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX1 )/sizeof( int ),
+                            predictDistributedPointsX1, predictDistributedPointsY1,
+                            distributedPoints1 );
+
+   int xMin2 = 5;
+   int yMin2 = 3;
+   int yMax2 = 10;
+   int xStart2 = 20;
+   int yStart2 = 7;
+   int width2 = 5;
+   t_EnvPathLinePtr distributedPoints2 = GetHeightGoingDownDistributedPoints( xMin2, yMin2, yMax2, xStart2, yStart2, width2 );
+   int predictDistributedPointsX2[] = {
+      5, 5, 10, 10, 15, 15, 20, 20
+   };
+   int predictDistributedPointsY2[] = {
+      10, 3, 3, 10, 10, 3, 3, 7
+   };
+   AssertEnvPathLineMember( sizeof( predictDistributedPointsX2 )/sizeof( int ),
+                            predictDistributedPointsX2, predictDistributedPointsY2,
+                            distributedPoints2 );
+}
+END_TEST
 
 static Suite *envPathLine_suite(
    void
@@ -492,6 +644,10 @@ static Suite *envPathLine_suite(
    tcase_add_test( tc_core, test_InsertNewGpsPathPoint );
    tcase_add_test( tc_core, test_TurnEnv2GpsPathLine );
    tcase_add_test( tc_core, test_FilterInBeamPathLineNext );
+   tcase_add_test( tc_core, test_GetLengthGoingUpDistributedPoints );
+   tcase_add_test( tc_core, test_GetLengthGoingDownDistributedPoints );
+   tcase_add_test( tc_core, test_GetHeightGoingUpDistributedPoints );
+   tcase_add_test( tc_core, test_GetLengthGoingDownDistributedPoints );
    suite_add_tcase( s, tc_core );
 
    return s;

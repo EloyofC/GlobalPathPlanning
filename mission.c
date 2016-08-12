@@ -61,52 +61,52 @@ static unsigned char IsScanWidthHorizon(
    return widthInfo.m_isHorizon == 1;
 }
 
-/* t_PathLinesPtr GetScanLinesInRec( */
-/*    int lonStart, */
-/*    int latStart, */
-/*    int lonEnd, */
-/*    int latEnd, */
-/*    struct t_RectangleArea rectangle, */
-/*    struct t_ScanWidthInfo widthInfo, */
-/*    t_ObstaclesPtr obstacles */
-/*    ) { */
-/*    int lonTopLeft = GetLonTopLeftFromRec( rectangle ); */
-/*    int latTopLeft = GetLatTopLeftFromRec( rectangle ); */
-/*    int lonBottomRight = GetLonBottomRightFromRec( rectangle ); */
-/*    int latBottomRight = GetLatBottomRightFromRec( rectangle ); */
-/*    int cellStartX = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonStart ) / c_lengthOfUnit; */
-/*    int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_heightOfUnit; */
-/*    int cellEndX =  CalGpsDistanceLon( lonTopLeft, latTopLeft, lonEnd ) / c_lengthOfUnit; */
-/*    int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_heightOfUnit; */
-/*    t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft, */
-/*                                                               lonBottomRight, latBottomRight, */
-/*                                                               c_lengthOfUnit, c_heightOfUnit, */
-/*                                                               obstacles ); */
-
-/*    int endPointX = cellEndX - 1; */
-/*    int endPointY = cellEndY - 1; */
-/*    int width = GetWidthFromScanWidthInfo( widthInfo ); */
-/*    t_PathLinesPtr finalPathLine = NULL; */
-/*    int isScanLineHorizon = IsScanWidthHorizon( widthInfo ); */
-/*    if ( isScanLineHorizon ) { */
-/*       /\* ensure that the cellWidth is larger than 1 *\/ */
-/*       int cellWidth = width < c_heightOfUnit ? 1 : width / c_heightOfUnit; */
-/*       finalPathLine = ScanSearch( cellStartX, cellStartY, */
-/*                                   endPointX, endPointY, */
-/*                                   cellWidth, */
-/*                                   newEnvironment ); */
-/*    } else { */
-/*       int cellWidth = width < c_lengthOfUnit ? 1 : width / c_lengthOfUnit; */
-/*       finalPathLine = ScanSearch( cellStartX, cellStartY, */
-/*                                   endPointX, endPointY, */
-/*                                   cellWidth, */
-/*                                   newEnvironment ); */
-/*    } */
-/*    DeleteEnvironment( newEnvironment ); */
-/*    return finalPathLine; */
-/* } */
-
 t_PathLinesPtr GetScanLinesInRec(
+   int lonStart,
+   int latStart,
+   int lonEnd,
+   int latEnd,
+   struct t_RectangleArea rectangle,
+   struct t_ScanWidthInfo widthInfo,
+   t_ObstaclesPtr obstacles
+   ) {
+   int lonTopLeft = GetLonTopLeftFromRec( rectangle );
+   int latTopLeft = GetLatTopLeftFromRec( rectangle );
+   int lonBottomRight = GetLonBottomRightFromRec( rectangle );
+   int latBottomRight = GetLatBottomRightFromRec( rectangle );
+   int cellStartX = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonStart ) / c_lengthOfUnit;
+   int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / c_heightOfUnit;
+   int cellEndX =  CalGpsDistanceLon( lonTopLeft, latTopLeft, lonEnd ) / c_lengthOfUnit;
+   int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / c_heightOfUnit;
+   t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
+                                                              lonBottomRight, latBottomRight,
+                                                              c_lengthOfUnit, c_heightOfUnit,
+                                                              obstacles );
+
+   int endPointX = cellEndX - 1;
+   int endPointY = cellEndY - 1;
+   int width = GetWidthFromScanWidthInfo( widthInfo );
+   t_PathLinesPtr finalPathLine = NULL;
+   int isScanLineHorizon = IsScanWidthHorizon( widthInfo );
+   if ( isScanLineHorizon ) {
+      /* ensure that the cellWidth is larger than 1 */
+      int cellWidth = width < c_heightOfUnit ? 1 : width / c_heightOfUnit;
+      finalPathLine = ScanSearch( cellStartX, cellStartY,
+                                  endPointX, endPointY,
+                                  cellWidth, isScanLineHorizon,
+                                  newEnvironment );
+   } else {
+      int cellWidth = width < c_lengthOfUnit ? 1 : width / c_lengthOfUnit;
+      finalPathLine = ScanSearch( cellStartX, cellStartY,
+                                  endPointX, endPointY,
+                                  cellWidth, isScanLineHorizon,
+                                  newEnvironment );
+   }
+   DeleteEnvironment( newEnvironment );
+   return finalPathLine;
+}
+
+t_PathLinesPtr GetScanLinesInRecWithANN(
    int lonStart,
    int latStart,
    int lonEnd,

@@ -208,239 +208,201 @@ static t_EnvPathLinePtr StoreNewPathMember(
 }
 
 static int IsNumEven(
-   int num
+   const int num
    ) {
    int half = num/2;
    return half * 2 == num;
 }
 
-/* !!This function may need to think it over again */
-static t_EnvPathLinePtr StoreDistributedPoints(
-   int xMin,
-   int yMin,
-   int xMax,
-   int yMax,
-   int xStart,
-   int yStart,
-   int width
-   ) {
-   int widthCount = ( yMax - yMin )/width;
-   int isGoUp;
-   if ( yStart == yMin )
-      isGoUp = 1;
-   else
-      isGoUp = 0;
-   if ( ( yMax - yMin ) > width * widthCount ) {
-      widthCount++;              /* need to compensate the rest of the width */
-   }
-
-   int itemp_x, jtemp_x;
-   if ( IsNumEven( widthCount ) ) {
-      /* determines the initial x according to the widthCount even or odd */
-      itemp_x = xStart;
-      jtemp_x = xMin + xMax - itemp_x;
-   } else {
-      itemp_x = xMin + xMax - xStart;
-      jtemp_x = xStart;
-   }
-
-   t_EnvPathLinePtr distributedPoints = NULL;
-   if ( isGoUp ) {
-      int i, j, yTemp;
-      for ( i=j=0, yTemp = yMin; i < widthCount - 1; i++, j=j+2, yTemp += width ) {
-         distributedPoints = StoreNewDistributedMembers( itemp_x, yTemp, distributedPoints );
-         distributedPoints = StoreNewDistributedMembers( jtemp_x, yTemp, distributedPoints );
-         SwapNum( &itemp_x, &jtemp_x );
-      }
-      distributedPoints = StoreNewDistributedMembers( itemp_x, yMax, distributedPoints ); /* take care of the rest */
-      distributedPoints = StoreNewDistributedMembers( jtemp_x, yMax, distributedPoints );
-   } else {
-      int i, j, yTemp;
-      for ( i=j=0, yTemp = yMax; i < widthCount - 1; i++, j=j+2, yTemp -= width ) {
-         distributedPoints = StoreNewDistributedMembers( itemp_x, yTemp, distributedPoints );
-         distributedPoints = StoreNewDistributedMembers( jtemp_x, yTemp, distributedPoints );
-         SwapNum( &itemp_x, &jtemp_x );
-      }
-      distributedPoints = StoreNewDistributedMembers( itemp_x, yMin, distributedPoints );
-      distributedPoints = StoreNewDistributedMembers( jtemp_x, yMin, distributedPoints );
-   }
-   return distributedPoints;
-}
-
-static void StoreDistributedPointsCor(
-   const int xCurrent,
-   const int yCurrent,
-   const int index,
-   int *corX,
-   int *corY
-   ) {
-   *( corX + index ) = xCurrent;
-   *( corY + index ) = yCurrent;
-}
-
-static void StoreDistributedPointsTwoSidesXCor(
+static t_EnvPathLinePtr StoreDistributedPointsTwoSidesXCor(
    const int xCurrent,
    const int xNext,
    const int yCurrent,
-   const int index,
-   int *corX,
-   int *corY
+   const t_EnvPathLinePtr distributedPoints
    ) {
-   StoreDistributedPointsCor( xCurrent, yCurrent, index, corX, corY );
-   StoreDistributedPointsCor( xNext, yCurrent, index + 1, corX, corY );
+   t_EnvPathLinePtr newDistributedPoints = StoreNewDistributedMembers( xCurrent, yCurrent, distributedPoints );
+   newDistributedPoints = StoreNewDistributedMembers( xNext, yCurrent, newDistributedPoints );
+   return newDistributedPoints;
 }
 
-static int GetLengthGoingUpDistributedPoints(
+static t_EnvPathLinePtr GetLengthGoingUpDistributedPoints(
    const int xMin,
    const int xMax,
    const int yMax,
    const int xStart,
    const int yStart,
-   const int width,
-   int *corX,
-   int *corY
+   const int width
    ) {
-   int xASide = xStart;
-   int xBSide = xMin + xMax - xASide;
-   int i = 0;
-   int yCurrent = yStart;
-   for ( int yLast = yMax - width; yCurrent < yLast; yCurrent += width ) {
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
-      i = i + 2;
-      SwapNum( &xASide, &xBSide );
-   }
-   if ( yCurrent + width == yMax ) {
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
-      i = i + 2;
+   /* xASide is the nearest cor to the xStart */
+   int xASide;
+   if ( abs( xMin - xStart ) <= abs( xMax - xStart )) {
+      xASide = xMin;
    } else {
-      int yPrevLast = yCurrent + ( yMax - yCurrent )/2;
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yPrevLast, i, corX, corY );
-      i = i + 2;
-      SwapNum( &xASide, &xBSide );
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yMax, i, corX, corY );
-      i = i+ 2;
+       xASide = xMax;
    }
-   return i;
+   int xBSide = xMin + xMax - xASide;
+   t_EnvPathLinePtr distributedPoints = NULL;
+   /* store the first couple of points */
+   distributedPoints = StoreDistributedPointsTwoSidesXCor( xStart, xBSide, yStart, distributedPoints );
+   SwapNum( &xASide, &xBSide );
+
+   /* store the members except the first and last */
+   int yCurrent = yStart + width;
+   for ( ; yCurrent < yMax; yCurrent += width ) {
+      distributedPoints = StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, distributedPoints );
+      SwapNum( &xASide, &xBSide );
+   }
+
+   /* store the last couple points */
+   distributedPoints = StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yMax, distributedPoints );
+
+   return distributedPoints;
 }
 
-static int GetLengthGoingDownDistributedPoints(
+static t_EnvPathLinePtr GetLengthGoingDownDistributedPoints(
    const int xMin,
    const int yMin,
    const int xMax,
    const int xStart,
    const int yStart,
-   const int width,
-   int *corX,
-   int *corY
+   const int width
    ) {
-   int xASide = xStart;
-   int xBSide = xMin + xMax - xASide;
-   int i = 0;
-   int yCurrent = yStart;
-   for ( int yLast = yMin + width; yCurrent > yLast; yCurrent -= width ) {
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
-      i = i + 2;
-      SwapNum( &xASide, &xBSide );
-   }
-   if ( yCurrent - width == yMin ) {
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, i, corX, corY );
-      i = i + 2;
+   /* xASide is the nearest cor to the xStart */
+   int xASide;
+   if ( abs( xMin - xStart ) <= abs( xMax - xStart ) ) {
+      xASide = xMin;
    } else {
-      int yPrevLast = yCurrent - ( yCurrent - yMin )/2;
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yPrevLast, i, corX, corY );
-      i = i + 2;
-      SwapNum( &xASide, &xBSide );
-      StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yMin, i, corX, corY );
-      i = i+ 2;
+       xASide = xMax;
    }
-   return i;
+   int xBSide = xMin + xMax - xASide;
+   t_EnvPathLinePtr distributedPoints = NULL;
+   /* store the first couple of points */
+   distributedPoints = StoreDistributedPointsTwoSidesXCor( xStart, xBSide, yStart, distributedPoints );
+   SwapNum( &xASide, &xBSide );
+
+   /* store the members except the first and last */
+   int yCurrent = yStart - width;
+   for ( ; yCurrent > yMin; yCurrent -= width ) {
+      distributedPoints = StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yCurrent, distributedPoints );
+      SwapNum( &xASide, &xBSide );
+   }
+
+   /* store the last couple points */
+   distributedPoints = StoreDistributedPointsTwoSidesXCor( xASide, xBSide, yMin, distributedPoints );
+
+   return distributedPoints;
 }
 
-static void StoreDistributedPointsTwoSidesYCor(
+static t_EnvPathLinePtr StoreDistributedPointsTwoSidesYCor(
    const int xCurrent,
    const int yCurrent,
    const int yNext,
-   const int index,
-   int *corX,
-   int *corY
+   const t_EnvPathLinePtr distributedPoints
    ) {
-   StoreDistributedPointsCor( xCurrent, yCurrent, index, corX, corY );
-   StoreDistributedPointsCor( xCurrent, yNext, index, corX, corY );
+   t_EnvPathLinePtr newDistributedPoints = StoreNewDistributedMembers( xCurrent, yCurrent, distributedPoints );
+   newDistributedPoints = StoreNewDistributedMembers( xCurrent, yNext, newDistributedPoints );
+   return newDistributedPoints;
 }
 
-static int GetHeightGoingUpDistributedPoints(
+static t_EnvPathLinePtr GetHeightGoingUpDistributedPoints(
+   const int yMin,
+   const int xMax,
+   const int yMax,
+   const int xStart,
+   const int yStart,
+   const int width
+   ) {
+   int yASide;
+   if ( abs( yMin - yStart ) <= abs( yMax - yStart ) ) {
+      yASide = yMin;
+   } else {
+      yASide = yMax;
+   }
+   int yBSide = yMin + yMax - yASide;
+   t_EnvPathLinePtr distributedPoints = NULL;
+   distributedPoints = StoreDistributedPointsTwoSidesYCor( xStart, yStart, yBSide, distributedPoints );
+   SwapNum( &yASide, &yBSide );
+
+   int xCurrent = xStart + width;
+   for ( ; xCurrent < xMax; xCurrent += width ) {
+      distributedPoints = StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, distributedPoints );
+      SwapNum( &yASide, &yBSide );
+   }
+
+   distributedPoints = StoreDistributedPointsTwoSidesYCor( xMax, yASide, yBSide, distributedPoints );
+
+   return distributedPoints;
+}
+
+static t_EnvPathLinePtr GetHeightGoingDownDistributedPoints(
+   const int xMin,
+   const int yMin,
+   const int yMax,
+   const int xStart,
+   const int yStart,
+   const int width
+   ) {
+   int yASide;
+   if ( abs( yMin - yStart ) <= abs( yMax - yStart ) ) {
+      yASide = yMin;
+   } else {
+      yASide = yMax;
+   }
+   int yBSide = yMin + yMax - yASide;
+   t_EnvPathLinePtr distributedPoints = NULL;
+   distributedPoints = StoreDistributedPointsTwoSidesYCor( xStart, yStart, yBSide, distributedPoints );
+   SwapNum( &yASide, &yBSide );
+
+   int xCurrent = xStart - width;
+   for ( ; xCurrent > xMin; xCurrent -= width ) {
+      distributedPoints = StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, distributedPoints );
+      SwapNum( &yASide, &yBSide );
+   }
+
+   distributedPoints = StoreDistributedPointsTwoSidesYCor( xMin, yASide, yBSide, distributedPoints );
+   return distributedPoints;
+}
+
+static t_EnvPathLinePtr StoreDistributedPoints(
+   const int xMin,
    const int yMin,
    const int xMax,
    const int yMax,
    const int xStart,
    const int yStart,
    const int width,
-   int *corX,
-   int *corY
+   const unsigned char isScanLineHorizon
    ) {
-   int yASide = yStart;
-   int yBSide = yMin + yMax - yASide;
-   int i = 0;
-   int xCurrent = xStart;
-   for ( int xLast = xMax - width; xCurrent < xLast; xCurrent += width ) {
-      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
-      i = i + 2;
-      SwapNum( &yASide, &yBSide );
-   }
-   if ( xCurrent + width == xMax ) {
-      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
-      i = i + 2;
+   int isGoUp;
+   if ( abs( yStart - yMin ) <= abs( yStart - yMax ) ) {
+      isGoUp = 1;
    } else {
-      int xPrevLast = xCurrent + ( xMax - xCurrent )/2;
-      StoreDistributedPointsTwoSidesYCor( xPrevLast, yASide, yBSide, i, corX, corY );
-      i = i + 2;
-      SwapNum( &yASide, &yBSide );
-      StoreDistributedPointsTwoSidesYCor( yMax, yASide, yBSide, i, corX, corY );
-      i = i + 2;
+      isGoUp = 0;
    }
-   return i;
-}
 
-static int GetHeightGoingDownDistributedPoints(
-   const int xMin,
-   const int yMin,
-   const int yMax,
-   const int xStart,
-   const int yStart,
-   const int width,
-   int *corX,
-   int *corY
-   ) {
-   int yASide = yStart;
-   int yBSide = yMin + yMax - yASide;
-   int i = 0;
-   int xCurrent = xStart;
-   for ( int xLast = xMin + width; xCurrent > xLast; xCurrent -= width ) {
-      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
-      i = i + 2;
-      SwapNum( &yASide, &yBSide );
-   }
-   if ( xCurrent + width == xMin ) {
-      StoreDistributedPointsTwoSidesYCor( xCurrent, yASide, yBSide, i, corX, corY );
-      i = i + 2;
+   if ( isScanLineHorizon ) {
+      if ( isGoUp ) {
+         return GetLengthGoingUpDistributedPoints( xMin, xMax, yMax, xStart, yStart, width );
+      } else {
+         return GetLengthGoingDownDistributedPoints( xMin, yMin, xMax, xStart, yStart, width );
+      }
    } else {
-      int xPrevLast = xCurrent + ( xCurrent - xMin )/2;
-      StoreDistributedPointsTwoSidesYCor( xPrevLast, yASide, yBSide, i, corX, corY );
-      i = i + 2;
-      SwapNum( &yASide, &yBSide );
-      StoreDistributedPointsTwoSidesYCor( yMax, yASide, yBSide, i, corX, corY );
-      i = i + 2;
+      if ( isGoUp ) {
+         return GetHeightGoingUpDistributedPoints( yMin, xMax, yMax, xStart, yStart, width );
+      } else {
+         return GetHeightGoingDownDistributedPoints( xMin, yMin, yMax, xStart, yStart, width );
+      }
    }
-   return i;
 }
 
 /* This routine get the distributed points with the request of the scan search */
 static t_EnvPathLinePtr GetDistributedPoints(
-   int xStart,
-   int yStart,
-   int xEnd,
-   int yEnd,
-   int width
+   const int xStart,
+   const int yStart,
+   const int xEnd,
+   const int yEnd,
+   const int width,
+   const unsigned char isScanLineHorizon
    ) {
    int min_x = xStart < xEnd ? xStart : xEnd;
    int min_y = yStart < yEnd ? yStart : yEnd;
@@ -448,7 +410,8 @@ static t_EnvPathLinePtr GetDistributedPoints(
    int max_y = yStart + yEnd - min_y;
    t_EnvPathLinePtr distributedPoints = StoreDistributedPoints( min_x, min_y,
                                                                 max_x, max_y,
-                                                                xStart, yStart, width );
+                                                                xStart, yStart,
+                                                                width, isScanLineHorizon );
    return distributedPoints;
 }
 
@@ -1188,6 +1151,7 @@ t_PathLinesPtr ScanSearch(
    int xEnd,
    int yEnd,
    int width,
+   unsigned char isScanLineHorizon,
    t_EnvironmentPtr environment
    ) {
    if ( !IsStartAndEndPointValid( xStart, yStart, xEnd, yEnd, environment ) ) {
@@ -1196,7 +1160,7 @@ t_PathLinesPtr ScanSearch(
 
    t_EnvPathLinePtr distributedPoints = GetDistributedPoints( xStart, yStart,
                                                              xEnd, yEnd,
-                                                             width );
+                                                              width, isScanLineHorizon );
 
    DebugCode(
       PrintDistributedPathMembers( distributedPoints );

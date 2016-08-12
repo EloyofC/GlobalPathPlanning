@@ -163,7 +163,7 @@ static int TestTemplateInRec(
    struct t_RectangleArea rectangle = SetInRectangle( lonTopLeft, latTopLeft,
                                                       lonBottomRight, latBottomRight );
    struct t_ScanWidthInfo widthInfo = SetInWidthInfo( width, isHorizon );
-   t_PathLinesPtr pathLines = GetScanLinesInRec( lonTopLeft, latTopLeft,
+   t_PathLinesPtr pathLines = GetScanLinesInRecWithANN( lonTopLeft, latTopLeft,
                                                  lonBottomRight, latBottomRight,
                                                  rectangle, widthInfo, obstacles );
    FreeObstacles( obstacles );
@@ -395,7 +395,7 @@ static int TestSingleObstacleInRec(
    t_ObstaclesPtr obstacles = GetSingleObstacleInArea( lonTopLeft, latTopLeft,
                                                        lonBottomRight, latBottomRight );
    return TestTemplateInRec( lonTopLeft, latTopLeft, lonBottomRight,
-                             latBottomRight, width, c_IsHorizon, obstacles );
+                             latBottomRight, width, c_IsVertical, obstacles );
 }
 
 
