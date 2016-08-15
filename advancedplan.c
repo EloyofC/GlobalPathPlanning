@@ -207,13 +207,6 @@ static t_EnvPathLinePtr StoreNewPathMember(
    return InsertNewEnvPathLine( x, y, envPathLine );
 }
 
-static int IsNumEven(
-   const int num
-   ) {
-   int half = num/2;
-   return half * 2 == num;
-}
-
 static t_EnvPathLinePtr StoreDistributedPointsTwoSidesXCor(
    const int xCurrent,
    const int xNext,
@@ -1184,12 +1177,16 @@ t_PathLinesPtr ScanSearch(
 t_PathLinesPtr ScanSearchWithANN(
    int xStart,
    int yStart,
-   int xEnd,
-   int yEnd,
    unsigned char isScanLineHorizon,
    t_EnvironmentPtr environment
    ) {
-   t_EnvPathLinePtr envPathLine = DoScanSearchInRec( xStart, yStart, xEnd, yEnd, isScanLineHorizon, environment );
+   t_EnvPathLinePtr envPathLine = DoScanSearchInRec( xStart, yStart, isScanLineHorizon, environment );
+
+   DebugCode(
+      PrintDistributedFreePathMembers( envPathLine );
+      fflush( stdout );
+      );
+
    t_PathLinesPtr finalPathLine = GetFinalGpsPathLine( envPathLine, environment );
    FreePathLine( envPathLine );
    return finalPathLine;

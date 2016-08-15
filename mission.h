@@ -51,11 +51,11 @@ struct t_ExpectedCruiseCricle {
    unsigned char m_isClockWise;
 };
 
-t_PathLinesPtr GetScanLinesInRec( int lonStart, int latStart, int lonEnd, int latEnd, struct t_RectangleArea rectangle, struct t_ScanWidthInfo widthInfo, t_ObstaclesPtr obstacles );
-t_PathLinesPtr GetScanLinesInRecWithANN( int lonStart, int latStart, int lonEnd, int latEnd, struct t_RectangleArea rectangle, struct t_ScanWidthInfo widthInfo, t_ObstaclesPtr obstacles );
-t_PathLinesPtr GetCruisePointsInCircle(struct t_ExpectedCruiseCricle circle,  struct t_RectangleArea rectangle, t_ObstaclesPtr obstacles);
-t_PathLinesPtr GetPointsWithFixedMultiPosition(t_PathLinesPtr positions, struct t_RectangleArea rectangle, t_ObstaclesPtr obstacles);
-void FreeFinalPathLines( t_PathLinesPtr pathLine );
-void PrintFinalGpsPathLines( t_PathLinesPtr pathLine );
+t_PathLinesPtr GetScanLinesInRec( const int lonStart, const int latStart, const int lonEnd, const int latEnd, const struct t_RectangleArea rectangle, const struct t_ScanWidthInfo widthInfo, const t_ObstaclesPtr obstacles );
+t_PathLinesPtr GetScanLinesInRecWithANN( const int lonStart, const int latStart, const int lonEnd, const int latEnd, const struct t_RectangleArea rectangle, const struct t_ScanWidthInfo widthInfo, const t_ObstaclesPtr obstacles );
+t_PathLinesPtr GetCruisePointsInCircle( const struct t_ExpectedCruiseCricle circle, const struct t_RectangleArea rectangle, const t_ObstaclesPtr obstacles);
+t_PathLinesPtr GetPointsWithFixedMultiPosition( const t_PathLinesPtr positions, const struct t_RectangleArea rectangle, const t_ObstaclesPtr obstacles);
+void FreeFinalPathLines( const t_PathLinesPtr pathLine );
+void PrintFinalGpsPathLines( const t_PathLinesPtr pathLine );
 
 #endif

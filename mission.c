@@ -62,13 +62,13 @@ static unsigned char IsScanWidthHorizon(
 }
 
 t_PathLinesPtr GetScanLinesInRec(
-   int lonStart,
-   int latStart,
-   int lonEnd,
-   int latEnd,
-   struct t_RectangleArea rectangle,
-   struct t_ScanWidthInfo widthInfo,
-   t_ObstaclesPtr obstacles
+   const int lonStart,
+   const int latStart,
+   const int lonEnd,
+   const int latEnd,
+   const struct t_RectangleArea rectangle,
+   const struct t_ScanWidthInfo widthInfo,
+   const t_ObstaclesPtr obstacles
    ) {
    int lonTopLeft = GetLonTopLeftFromRec( rectangle );
    int latTopLeft = GetLatTopLeftFromRec( rectangle );
@@ -107,13 +107,13 @@ t_PathLinesPtr GetScanLinesInRec(
 }
 
 t_PathLinesPtr GetScanLinesInRecWithANN(
-   int lonStart,
-   int latStart,
-   int lonEnd,
-   int latEnd,
-   struct t_RectangleArea rectangle,
-   struct t_ScanWidthInfo widthInfo,
-   t_ObstaclesPtr obstacles
+   const int lonStart,
+   const int latStart,
+   const int lonEnd,
+   const int latEnd,
+   const struct t_RectangleArea rectangle,
+   const struct t_ScanWidthInfo widthInfo,
+   const t_ObstaclesPtr obstacles
    ) {
    int lonTopLeft = GetLonTopLeftFromRec( rectangle );
    int latTopLeft = GetLatTopLeftFromRec( rectangle );
@@ -122,27 +122,22 @@ t_PathLinesPtr GetScanLinesInRecWithANN(
    int width = GetWidthFromScanWidthInfo( widthInfo );
    int cellStartX = CalGpsDistanceLon( lonTopLeft, latTopLeft, lonStart ) / width;
    int cellStartY = CalGpsDistanceLat( lonTopLeft, latTopLeft, latStart ) / width;
-   int cellEndX =  CalGpsDistanceLon( lonTopLeft, latTopLeft, lonEnd ) / width;
-   int cellEndY =  CalGpsDistanceLat( lonTopLeft, latTopLeft, latEnd ) / width;
    t_EnvironmentPtr newEnvironment = InitialEnvWithObstacles( lonTopLeft, latTopLeft,
                                                               lonBottomRight, latBottomRight,
                                                               width, width,
                                                               obstacles );
 
-   int endPointX = cellEndX - 1;
-   int endPointY = cellEndY - 1;
    unsigned char isScanLineHorizon = IsScanWidthHorizon( widthInfo );
    t_PathLinesPtr finalPathLine = ScanSearchWithANN( cellStartX, cellStartY,
-                                                     endPointX, endPointY,
                                                      isScanLineHorizon, newEnvironment );
    DeleteEnvironment( newEnvironment );
    return finalPathLine;
 }
 
 t_PathLinesPtr GetCruisePointsInCircle(
-   struct t_ExpectedCruiseCricle circle,
-   struct t_RectangleArea rectangle,
-   t_ObstaclesPtr obstacles
+   const struct t_ExpectedCruiseCricle circle,
+   const struct t_RectangleArea rectangle,
+   const t_ObstaclesPtr obstacles
    ){
    int lonTopLeft = GetLonTopLeftFromRec( rectangle );
    int latTopLeft = GetLatTopLeftFromRec( rectangle );
@@ -158,9 +153,9 @@ t_PathLinesPtr GetCruisePointsInCircle(
 }
 
 t_PathLinesPtr GetPointsWithFixedMultiPosition(
-   t_PathLinesPtr positions,
-   struct t_RectangleArea rectangle,
-   t_ObstaclesPtr obstacles
+   const t_PathLinesPtr positions,
+   const struct t_RectangleArea rectangle,
+   const t_ObstaclesPtr obstacles
    ){
    int lonTopLeft = GetLonTopLeftFromRec( rectangle );
    int latTopLeft = GetLatTopLeftFromRec( rectangle );
@@ -176,25 +171,27 @@ t_PathLinesPtr GetPointsWithFixedMultiPosition(
 }
 
 static void FreeFinalPathPoints(
-   t_PathPointPtr pathPointHead
+   const t_PathPointPtr pathPointHead
    ) {
    t_PathPointPtr pathPointTemp;
 
-   for ( ; pathPointHead != NULL; pathPointHead = pathPointTemp ) {
-      pathPointTemp = GetGpsPathPointNext( pathPointHead );
-      Free( pathPointHead );
+   for ( t_PathPointPtr pathPointCurrent = pathPointHead;
+         pathPointCurrent != NULL;
+         pathPointCurrent = pathPointTemp ) {
+      pathPointTemp = GetGpsPathPointNext( pathPointCurrent );
+      Free( pathPointCurrent );
    }
 }
 
 void FreeFinalPathLines(
-   t_PathLinesPtr finalPathLines
+   const t_PathLinesPtr finalPathLines
    ) {
    FreeFinalPathPoints( GetGpsPathLinePoints( finalPathLines ) );
    Free( finalPathLines );
 }
 
 void PrintFinalGpsPathLines(
-   t_PathLinesPtr pathLine
+   const t_PathLinesPtr pathLine
    ) {
    PrintGpsPathLines( pathLine, "The gps path line" );
 }

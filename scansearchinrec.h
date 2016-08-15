@@ -10,7 +10,7 @@ typedef struct t_Environment *t_EnvironmentPtr;
 struct t_EnvMember;
 typedef struct t_EnvMember *t_EnvironmentMemberPtr;
 
-t_EnvPathLinePtr DoScanSearchInRec( int xStart, int yStart, int xEnd, int yEnd, unsigned char isScanLineHorizon, t_EnvironmentPtr environment );
+t_EnvPathLinePtr DoScanSearchInRec( const int xStart, const int yStart, const unsigned char isScanLineHorizon, const t_EnvironmentPtr environment );
 
 int GetEnvLength( t_EnvironmentPtr environment );
 int GetEnvHeight( t_EnvironmentPtr environment );
